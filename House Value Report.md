@@ -64,9 +64,17 @@ Training model demo:
 ![Slide37](https://user-images.githubusercontent.com/101145370/165833263-855e83c4-5075-4d3e-b20b-43e70344109c.PNG)
 ![Slide40](https://user-images.githubusercontent.com/101145370/165833292-e2db0bb4-b6a8-4463-93c9-8f909ce4aa39.PNG)
 
-Ethical Implication:
-Just the model could be improved by considering more public and private factors. For example, we do not know whether the cooperative buildings is more popular for rent. More features like tax assessment, detailed geographic location(e.g. Neighborhood, school and transportation) will be involved.
+Just the model could be improved by considering more public and private factors. For example, we do not know whether the cooperative buildings are more popular for rent. More features like tax assessment, detailed geographic location(e.g. Neighborhood, school and transportation) will be involved.
 ![Slide42](https://user-images.githubusercontent.com/101145370/165833654-5c2a4877-fc63-4789-9974-8f4b12e61240.PNG)
 
+Reference:
+https://www.census.gov/programs-surveys/acs/data.html
+Zillow 2013 method
+https://www.zillow.com/research/zhvi-methodology/
+https://www.zillow.com/research/revisions-zhvi-methodology-6064/
+Zillow 2019 method
+https://www.zillow.com/research/zhvi-methodology-2019-deep-26226/
+https://www.ppic.org/wp-content/uploads/r-118hjr.pdf
 
-
+Geopandas code:
+https://github.com/SimonDuGL/driver

@@ -62,12 +62,15 @@ In conclusion, if the company wants to build houses for sale and sell houses as 
 
 Even with such a stable market, the house market in Texas has also increased since August, 2020. 
 
-Besides, the major preference could be reflected  through the difference between the price of houses sold and middle tier. According to the market data from Zillow since Oct. 2017 till March 2022, the sale price of single family residence houses is 20% higher than that of cooperative houses. The single family residence house seems more popular in Texas.50k/250k =20%
+Besides, the major preference could be reflected  through the difference between the price of houses sold and middle tier. According to the market data from Zillow since Oct. 2017 till March 2022, the single family residence house seems more popular than co-op house in Texas. The sale price of single family residence houses is 20% higher than that of cooperative houses.
+
+50k/250k =20%
+
 ![Slide24](https://user-images.githubusercontent.com/101145370/165826872-8180713c-2df1-4092-b025-74aefd3caf1b.PNG)
 
-Based on the regression prediction model, a 5 bedroom house price is most likely between $618k(pessimistic) and $641k(optimistic). It is about 630k.
+Based on the regression prediction model, a 5 bedroom house price is most likely between $618k(pessimistic) and $641k(optimistic). It is about $630k.
 
-618k + (641k - 618k)/ 2 
+618k + (641k - 618k)/ 2 = 630k
 
 ![Slide41](https://user-images.githubusercontent.com/101145370/165833306-1926bfff-a3d0-4627-ac36-72364439a279.PNG)
 Training model demo:

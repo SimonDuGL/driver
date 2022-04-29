@@ -68,7 +68,7 @@ Besides, the major preference could be reflected  through the difference between
 
 ![Slide24](https://user-images.githubusercontent.com/101145370/165826872-8180713c-2df1-4092-b025-74aefd3caf1b.PNG)
 
-Based on the regression prediction model, a 5 bedroom house price is most likely between $618k(pessimistic) and $641k(optimistic). It is about $630k.
+Based on the regression model, a 5 bedroom house price predicted is most likely between $618k(pessimistic) and $641k(optimistic). It is about $630k.
 
 618k + (641k - 618k)/ 2 = 630k
 

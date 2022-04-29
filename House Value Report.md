@@ -41,7 +41,7 @@ In CA, 3 bedroom house price (from 2009 to 2017) increased 78%.
 220/ 280 = 78%
 
 Median of price to rent ratio is taken for the last decade(2009-2017). States in red show that it is better to rent than to buy there. Seems because of the high price or population, CA is more appreciated for rent instead of buy.
-Besides, another reason could be that the environment factor or less population in the mountain area contributes to higher rent ratio. But here are the exceptions. Although there are not too many people in Nebraska, Mississippi, and Arkansas, these places are also good for buying a house.
+Besides, another reason could be that the environment factor or less population in the mountain area contributes to higher rent ratio. But here are the exceptions. Although there are not many people in Nebraska, Mississippi, and Arkansas, these places are also good for buying a house.
 
 Meanwhile, The color in West Virginia, Ohio, Michigan, Indiana, Illinois, Texas, Oklahoma is relatively stable though these pictures. Meaning these places are very popular. Besides, the house price is pretty fair. There is not too much difference between tiers and classes. If the company wants to build houses for sale, they need to build their houses in these areas. And if the target market group is the majority, the construction company may choose to build less than or equal to 3 bedroom houses.
 ![Slide21](https://user-images.githubusercontent.com/101145370/165826832-8c9e8e9e-ea3c-4229-b6a0-c02165d0048d.PNG)

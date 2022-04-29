@@ -1,4 +1,5 @@
-#The demonstation of building a friendly red-green map based on the dataset.
+#The demonstation of building a friendly red-green map according to the dataset.
+
 #The code is shown below:
 	
 url = "https://raw.githubusercontent.com/SimonDuGL/driver/main/us_map.json";

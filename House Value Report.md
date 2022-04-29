@@ -91,8 +91,6 @@ Zillow 2019 method
 
 https://www.zillow.com/research/zhvi-methodology-2019-deep-26226/
 
-https://www.ppic.org/wp-content/uploads/r-118hjr.pdf
-
 Geopandas code:
 
 https://github.com/SimonDuGL/driver

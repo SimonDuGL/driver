@@ -54,7 +54,7 @@ Besides, another reason could be that the environment factor or less population 
 Meanwhile, The color in West Virginia, Ohio, Michigan, Indiana, Illinois, Texas, Oklahoma is relatively stable though these pictures. Meaning these places are very popular. Besides, the house price is pretty fair. There is not much difference between tiers and classes. If the company wants to build houses for sale, they need to build their houses in these areas. And if the target market group is the majority, the construction company may choose to build less than or equal to 3 bedroom houses.
 ![Slide21](https://user-images.githubusercontent.com/101145370/165826832-8c9e8e9e-ea3c-4229-b6a0-c02165d0048d.PNG)
 
-The time for sale or rent in the west area is shorter than that of the eastern area, except Massachusetts and Virginia according to the Zillow data for all homes for sale or resale for the last decade(2009-2017).
+The time for sale in the west area is shorter than that of the eastern area, except Massachusetts and Virginia according to the Zillow data for all homes for sale or resale for the last decade(2009-2017).
 ![Slide22](https://user-images.githubusercontent.com/101145370/165826837-cb069e46-c256-4e28-8274-b322658f2d4d.PNG)
 
 In conclusion, if the company wants to build houses for sale and sell houses as quickly as possible, they need to build their houses in Texas.

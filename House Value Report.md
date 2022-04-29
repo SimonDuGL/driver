@@ -9,12 +9,19 @@ Here is the dataset available, Zillow Home Inc.
 In the last decade(2009 -2017), the house price increased at least 42% in texas. Increase rate is almost twice that of the New York area, the financial center in the US.
 ![Slide12](https://user-images.githubusercontent.com/101145370/165826651-73854c9f-acb4-48a8-9ea0-0980f3c3bfd7.PNG)
 ![Slide13](https://user-images.githubusercontent.com/101145370/165828020-9827ba96-201e-4016-b6d3-9effaae910b1.PNG)
+
 Texas:
+
 270k – 190k = 80k
+
 80k/ 190k = 42%
+
 New York area:
+
 310k – 250k = 60k
+
 60k/ 250k = 24%(Relatively stable)
+
 
 Although we can know from the picture that even the 3 bedroom house price in CA was higher than $280k, 13 years ago(2009), simply using the chart to compare states one by one seems not very efficient and easy-to-look. Then the geometry graph is needed.
 
@@ -26,7 +33,11 @@ mainland of the US could be classified by on the states or regions.
 Although the population factor could be affected by birth rate and mortality, migration and foreign settlement, let us get a big picture about the population base. As we can see, California, Texas, New York, and Florida are more popular in 2010. And have less population in the Mountain area and West North Central area.
 ![Slide16](https://user-images.githubusercontent.com/101145370/165826772-cba8cbcf-7fb5-4fb6-9e05-cb7b9ff95c04.PNG)
 
-The 3 bedroom house Median price for last decade(2009-2017) in each states is relatively close and similar except the price in District of Columbia, CA and Massachusetts, a little high.
+The 3 bedroom house Median price for last decade(2009-2017) in each states is relatively close and similar except the price in District of Columbia, CA and Massachusetts, a little high.In CA, 3 bedroom house price (from 2009 to 2017) increased 78%.
+
+500k -280k = 220k
+
+220/ 280 = 78%
 ![Slide17](https://user-images.githubusercontent.com/101145370/165826786-10c76b99-f573-443e-a661-f0a13ee212ef.PNG)
 
 The map is becoming brighter, meaning, most of the 4 bedroom house price in the US is 50k – 100 k more than that of a 3 bedroom house or that of the middle tier can accept. It also means the 4 bedroom house seems not affordable for most people in each state except New York.
@@ -36,9 +47,6 @@ In Washington DC, California, New York, Massachusetts, New Jersey, 4, 5, or 5+ b
 ![Slide19](https://user-images.githubusercontent.com/101145370/165826799-a2dd13b8-4045-4653-b56c-41f43b4e125f.PNG)
 
 ![Slide20](https://user-images.githubusercontent.com/101145370/165826804-ab285fa3-69ee-4847-90bf-5a24de2f6592.PNG)
-In CA, 3 bedroom house price (from 2009 to 2017) increased 78%.
-500k -280k = 220k
-220/ 280 = 78%
 
 Median of price to rent ratio is taken for the last decade(2009-2017). States in red show that it is better to rent than to buy there. Seems because of the high price or population, CA is more appreciated for rent instead of buy.
 Besides, another reason could be that the environment factor or less population in the mountain area contributes to higher rent ratio. But here are the exceptions. Although there are not many people in Nebraska, Mississippi, and Arkansas, these places are also good for buying a house.
@@ -57,7 +65,10 @@ Even with such a stable market, the house market in Texas has also increased sin
 Besides, the major preference could be reflected  through the difference between the price of houses sold and middle tier. According to the market data from Zillow since Oct. 2017 till March 2022, the sale price of single family residence houses is 20% higher than that of cooperative houses. The single family residence house seems more popular in Texas.50k/250k =20%
 ![Slide24](https://user-images.githubusercontent.com/101145370/165826872-8180713c-2df1-4092-b025-74aefd3caf1b.PNG)
 
-Based on the regression prediction model, a 5 bedroom house price is most likely between $618k(pessimistic) and $641k(optimistic). 618k + (641k - 618k)/ 2 about 630k.
+Based on the regression prediction model, a 5 bedroom house price is most likely between $618k(pessimistic) and $641k(optimistic). It is about 630k.
+
+618k + (641k - 618k)/ 2 
+
 ![Slide41](https://user-images.githubusercontent.com/101145370/165833306-1926bfff-a3d0-4627-ac36-72364439a279.PNG)
 Training model demo:
 ![Slide36](https://user-images.githubusercontent.com/101145370/165833242-7e959dbd-83d2-45c1-bce0-94397c7950c4.PNG)

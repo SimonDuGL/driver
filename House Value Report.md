@@ -84,6 +84,10 @@ Just the model could be improved by considering more public and private factors.
 Reference:
 https://www.census.gov/programs-surveys/acs/data.html
 
+https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html?highlight=regression#sklearn.linear_model.LinearRegression
+
+https://github.com/arvkevi/kneed
+
 Zillow 2013 method
 
 https://www.zillow.com/research/zhvi-methodology/

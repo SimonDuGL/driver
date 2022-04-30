@@ -14,11 +14,11 @@ gplt.choropleth(
 
 ![map002](https://user-images.githubusercontent.com/101145370/165690621-7db77feb-b04a-4219-a735-79d00354bdcc.png)
 
-#Besides, we can customize new features by using the web format converter(Matlab GUI):
+#Besides, we can customize new features by using a Matlab GUI:
+Online platform Link: https://matlab.mathworks.com/
+GUI file link: 
 
-#link: https://machadop1407.github.io/chartjs-react-tutorial/
-
-#Then, copy the result into Jupyter notebook (Python Code below):
+#Then, copy the result into the Jupyter notebook (Python Code below):
 
 import json
 

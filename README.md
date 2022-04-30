@@ -16,7 +16,7 @@ gplt.choropleth(
 
 #Besides, we can customize new features by using the web format converter(Matlab GUI):
 
-#link: 
+#link: https://machadop1407.github.io/chartjs-react-tutorial/
 
 #Then, copy the result into Jupyter notebook (Python Code below):
 

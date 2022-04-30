@@ -22,7 +22,7 @@ gplt.choropleth(
 
 import json
 
-features = []; %Put the converter result into the squre brackets
+features = []; %Put the converter result into the square brackets
 
 gdf = {
     "type": "FeatureCollection",

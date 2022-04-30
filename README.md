@@ -19,13 +19,13 @@ gplt.choropleth(
 Online platform Link: https://matlab.mathworks.com/
 
 GUI file link: https://github.com/SimonDuGL/driver/commit/8eeb9e24edb4ebec543bb833c926dec39c19ed49/formatConverter.mlapp
+![20220430181916Administrator](https://user-images.githubusercontent.com/101145370/166125737-b6bc1461-597a-45f0-9be4-c519b79896be.png)
 
-
-#Then, copy the result into the Jupyter notebook (Python Code below):
+#Then, copy the Result into the Jupyter notebook (Python Code below):
 
 import json
 
-features = []; %Put the converter result into the square brackets
+features = []; %Put the converter Result into the square brackets
 
 gdf = {
     "type": "FeatureCollection",

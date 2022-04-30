@@ -14,3 +14,20 @@ gplt.choropleth(
 
 ![map002](https://user-images.githubusercontent.com/101145370/165690621-7db77feb-b04a-4219-a735-79d00354bdcc.png)
 
+#Besides, we can customize new features by using the web format converter(Matlab GUI):
+
+#link: 
+
+#Then, copy the result into Jupyter notebook (Python Code below):
+
+import json
+
+features = []; %Put the converter result into the squre brackets
+
+gdf = {
+    "type": "FeatureCollection",
+    "features": features
+    }
+
+with open("us_map.json", "w") as f:
+    f.write(json.dumps(gdf))

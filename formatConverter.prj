@@ -1,0 +1,97 @@
+<deployment-project plugin="plugin.webdeploy" plugin-version="1.0">
+  <configuration file="D:\333\formatConverter.prj" location="D:\333" name="formatConverter" target="target.webdeploy" target-name="Web App Compiler">
+    <param.appname>formatConverter</param.appname>
+    <param.intermediate>${PROJECT_ROOT}\formatConverter</param.intermediate>
+    <param.files.only>${PROJECT_ROOT}\formatConverter</param.files.only>
+    <param.output />
+    <param.checkbox>false</param.checkbox>
+    <param.logdir>${PROJECT_ROOT}\formatConverter</param.logdir>
+    <param.target.type>subtarget.web.app</param.target.type>
+    <param.user.defined.mcr.options />
+    <param.support.packages />
+    <unset>
+      <param.intermediate />
+      <param.files.only />
+      <param.output />
+      <param.checkbox />
+      <param.logdir />
+      <param.target.type />
+      <param.user.defined.mcr.options />
+      <param.support.packages />
+    </unset>
+    <fileset.web.main>
+      <file>${PROJECT_ROOT}\formatConverter.mlapp</file>
+    </fileset.web.main>
+    <fileset.resources />
+    <fileset.depfun>
+      <file>${PROJECT_ROOT}\elementOfMatrxCell2Str.m</file>
+      <file>${PROJECT_ROOT}\excel2json.m</file>
+      <file>${PROJECT_ROOT}\geometryPolygonJson.m</file>
+      <file>${PROJECT_ROOT}\isfirst.m</file>
+      <file>${PROJECT_ROOT}\isodd.m</file>
+      <file>${PROJECT_ROOT}\main.m</file>
+      <file>${PROJECT_ROOT}\propertyJson.m</file>
+    </fileset.depfun>
+    <fileset.package />
+    <build-deliverables>
+      <file location="${PROJECT_ROOT}\formatConverter" name="formatConverter.ctf" optional="false">D:\333\formatConverter\formatConverter.ctf</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>D:\Program Files\MATLAB\R2021b</root>
+      <toolboxes>
+        <toolbox name="matlabcoder" />
+        <toolbox name="embeddedcoder" />
+        <toolbox name="gpucoder" />
+        <toolbox name="fixedpoint" />
+        <toolbox name="matlabhdlcoder" />
+        <toolbox name="neuralnetwork" />
+      </toolboxes>
+      <toolbox>
+        <matlabcoder>
+          <enabled>true</enabled>
+        </matlabcoder>
+      </toolbox>
+      <toolbox>
+        <embeddedcoder>
+          <enabled>true</enabled>
+        </embeddedcoder>
+      </toolbox>
+      <toolbox>
+        <gpucoder>
+          <enabled>true</enabled>
+        </gpucoder>
+      </toolbox>
+      <toolbox>
+        <fixedpoint>
+          <enabled>true</enabled>
+        </fixedpoint>
+      </toolbox>
+      <toolbox>
+        <matlabhdlcoder>
+          <enabled>true</enabled>
+        </matlabhdlcoder>
+      </toolbox>
+      <toolbox>
+        <neuralnetwork>
+          <enabled>true</enabled>
+        </neuralnetwork>
+      </toolbox>
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>6.1</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>

@@ -24,4 +24,3 @@ for i = 1: size(GeometryCell1_content,1)
         end
     end
 end
-

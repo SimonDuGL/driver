@@ -99,5 +99,7 @@ Zillow 2019 method
 https://www.zillow.com/research/zhvi-methodology-2019-deep-26226/
 
 My code:
-https://colab.research.google.com/drive/1PH8_PWssxGLt7xo6GTT21kNBvqg55IhF?usp=sharing
+
 https://github.com/SimonDuGL/driver
+
+https://colab.research.google.com/drive/1PH8_PWssxGLt7xo6GTT21kNBvqg55IhF?usp=sharing

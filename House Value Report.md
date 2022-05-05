@@ -30,6 +30,8 @@ mainland of the US could be classified by on the states or regions.
 ![Slide15](https://user-images.githubusercontent.com/101145370/165826759-629837ef-6d36-4aeb-91d1-c032d6a84eb7.PNG)
 (picture from wikipedia)
 
+![us map](https://user-images.githubusercontent.com/101145370/167009583-ba7d2f1c-7e96-4280-b07a-c93c01d531e5.gif)
+
 Although the population factor could be affected by birth rate and mortality, migration and foreign settlement, let us get a big picture about the population base. As we can see, California, Texas, New York, and Florida are more popular in 2010. And have less population in the Mountain area and West North Central area.
 ![Slide16](https://user-images.githubusercontent.com/101145370/165826772-cba8cbcf-7fb5-4fb6-9e05-cb7b9ff95c04.PNG)
 

@@ -1,3 +1,4 @@
+//This is a .ino file,
 //there are about 25 functions in this robot control script
 //porject idea introduction:
 //https://docs.google.com/presentation/d/12GfPPMKdLY4WXjXnS6jgWiD87svpd2VR/edit?usp=sharing&ouid=104479909616474097737&rtpof=true&sd=true

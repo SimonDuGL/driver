@@ -1,0 +1,1249 @@
+//give power
+//set mode (pair, wireless, bluetooth)
+//select and start (signle servo control/ group action)
+//========================================================================================================================================================================
+
+// ----------LIBRARIES--------------
+
+#include "VL53L0X2.h"; //the bookshelf we create
+#include "Adafruit_VL53L0X2.h"
+#include "LobotServoController.h"
+#include "Ultrasound.h"
+//#include "Screen.h"
+#include <SoftwareSerial.h>
+#include <Arduino.h>//default
+#include <Wire.h>
+
+//byte   8 bit
+//short 16 bit
+//int   32 bit
+//long  64 bit
+//there is no unsigned byte in Arduino  //0 - 255 //A byte stores an 8-bit unsigned number, from 0 to 255.
+//unsigned short //0 - 65535
+//unsigned int   //0 - (2^32 - 1)
+//unsigned long
+
+// --------CONSTANTS (won't change)-------------------------------------------------------
+// address we will assign if dual sensor is present
+#define LOX1_ADDRESS 0x30//0x27 and 0x28 could be used
+#define LOX2_ADDRESS 0x29//default
+#define LOX3_ADDRESS 0x31
+#define LOX4_ADDRESS 0x32
+
+// set the pins to shutdown
+#define SHT_LOX1 6//sensor1//Servo7PositionSensor
+#define SHT_LOX2 A0//sensor2//Servo7PositionSensor
+#define SHT_LOX3 7//sensor3
+#define SHT_LOX4 A1//sensor4
+
+const byte RxPin = 4;
+const byte TxPin = 5;
+const byte LED = 13;
+const byte buttonPin = 12;   //Touch sensor
+
+//from the reference point 265 to the 10,000 ms point
+//distance sensor value from 265 to about 350
+//(350 - 265)/ 10,000 = 0.0084/ ms = 8.4/s
+float speedTrain = 0.0084;
+  //assume the sensor1 value will not stuck in a constant value when the robot arm moves
+  //assumw the pet will not stand between the sensor and the robot arm
+  //move train only if the sensor value is from sensor1 0 to 710
+  //protection:
+  //moveForward(durationMoveTrain_Max); allowed max distance //moveForward(durationMoveTrain_referPoint2jointPoint); in the setup() which means sensor1 310 joint point
+  unsigned int durationMoveTrain_referPoint2jointPoint = 15000;
+  unsigned short jointPoint = 310;  //before the point, the sensor value is accurate believe.
+  //sensor1     sensor1_Min     allowed min distance
+  unsigned short sensor1_Min = 110;
+  //reference point: 145 (143 - 147 is fine)
+  unsigned short referencePoint = 145;//default// should > 2 //should > sensor1_Min
+  //trainDuration = (147 - 143)/ speedTrain = 595.24 ms
+  unsigned short trainDuration = 595;//19;//952;//1000;//define the smallest motor step distance//resolution;
+  float safeIndex = 0.3;// 0 < safeIndex < 1
+//The sensor1 wall (mirror) is 6.5 cm far from the edge of platform.
+//The barrier, say pet, can not be under the edge
+//80 is the ideal backward sensor1 range (after the 308 point) per 10 seconds
+//10.3 is the ideal backward distance (after the 308 point) per 10 seconds
+//80/ 10.3 = x/ 6.5
+//x = 80 * 6.5/ 10.3 = 50.4854
+//Therefore, the allowed distance variance is no more than 50.4854
+//max distance Changed per trainDuration// arrange = 50.4854/ (trainDuration * speedTrain) = 10.1011;
+//it is better for us to choose the index less than or equal to 10
+byte barrierIndex = 9;
+
+//could be initialized again________________________
+  unsigned int durationMoveTrain_Max = (durationMoveTrain_referPoint2jointPoint + 30000) * 0.0105 / speedTrain;//56250;//45000;
+  //dictionary:
+  //the trashbin durationMoveTrain_Max, table 25000, the duration of train movement  
+  unsigned int durationMoveTrain_trashBin = durationMoveTrain_Max;
+  unsigned int durationMoveTrain_table = durationMoveTrain_referPoint2jointPoint + 10000;
+  
+
+//------------ VARIABLES (will change)-----------------------------------------------------
+unsigned long currentMillis = 0; //stores the value of total run time
+//loopPeriod = duration + interval;
+//period = interval + duration
+//if switch between two states is needed, then setting clock below:
+//if (state1) {
+//             set clock by using interval
+//  } else {//state2
+//             set clock by using duration
+//  }
+//in this class only duration or interval period is used
+
+// objects for the vl53l0x
+Adafruit_VL53L0X2 lox1;//VL53L0X2 lox1;
+//VL53L0X2 lox2;
+VL53L0X2 lox3;
+VL53L0X2 lox4;
+SoftwareSerial mySerial(RxPin, TxPin);
+LobotServoController robotController(mySerial);
+Ultrasound ultrasound;  //Instantiate the ultrasonic class
+//Screen screen;
+  /*
+  //why it cause dead loop if we call constructors in setup()
+  lox1 = Adafruit_VL53L0X2();//lox1 = VL53L0X2();
+  //lox2 = VL53L0X2();
+  lox3 = VL53L0X2();
+  lox4 = VL53L0X2();
+  //robotController(mySerial);
+  ultrasound = Ultrasound();  //Instantiate the ultrasonic class
+  //screen = Screen();
+  */
+  
+bool isRunTime = false;
+
+//could be initialized again________________________
+//assume servo7 is controlled by arduino board, Hiwonder robot arm board support it by providing energy and delivering information.
+bool isRunningTrain = false;
+//There are two methods to control the position of the train, servo7:
+//1. time setting
+//planned duration of the train Movement
+unsigned long previousMoveServo7_timer = 0;//it is not enough to use int // stores the value of currentMillis as the previousTimer for control the time of servo7 movement 
+bool allow2updatePreviousMoveServo7_timer = false;
+//2. distance setting.
+// through previousDistanceSensor1, by recording sensor1 value and comparing previous and current value, 
+//we can detect the movement accuracy or whether the sensor is barried.
+//integer distance;
+unsigned short previousDistanceSensor1 = 0;
+unsigned short sensor1 = 0;//train
+//previousDistanceSensor1 = sensor1; //update the previousDistanceSensor1 only if the sensor1 is working well and is not barried
+unsigned int durationMoveTrain = 0;
+//unsigned short sensor2 = 0;
+unsigned short sensor3 = 0;
+unsigned short sensor4 = 0;
+unsigned short distance = 0;//ultrasound sensor
+
+//Record the number of touches
+byte NumTouch;
+//byte buttonLed_State = LOW;
+
+
+
+
+//before power off, it is very important
+//put the good on the ground
+
+//before nap or stuck in some dead loop
+//stopTrain();
+//robotController.stopActionGroup();
+
+
+
+   
+
+//========================================================================================================================================================================
+void setup() {
+  //no need to be initalized again
+  //____________________________________________________________________________________________________________________
+              //initial master boards' interface
+              //________________________________
+              Serial.begin(9600);
+              // wait until serial port opens for native USB devices
+              while (! Serial) { delay(1); }
+
+
+              
+              mySerial.begin(9600); //communication between uno R3 kit and the robot arm
+              
+              pinMode(LED, OUTPUT);
+              pinMode(buttonPin, INPUT);
+              digitalWrite(LED, LOW);
+              // set the button pin as input with a pullup resistor to ensure it defaults to HIGH
+              pinMode(buttonPin, INPUT_PULLUP);
+              
+              pinMode(SHT_LOX1, OUTPUT);
+              pinMode(SHT_LOX2, OUTPUT);
+              pinMode(SHT_LOX3, OUTPUT);
+              pinMode(SHT_LOX4, OUTPUT);
+              //Serial.println(F("Shutdown TOF sensor pins inited..."));
+              digitalWrite(SHT_LOX1, LOW);
+              digitalWrite(SHT_LOX2, LOW);
+              digitalWrite(SHT_LOX3, LOW);
+              digitalWrite(SHT_LOX4, LOW);
+              //Serial.println(F("Both TOF sensors in reset mode...(pins are low)"));
+             
+              //Serial.println(F("Starting..."));  
+            
+              //initial sensors
+              //________________________________
+              setID();
+              delay(100);// the TOF distance sensors need 90 ms to read
+  initialization();//read_multi_tof_sensors(); //previousDistanceSensor1 = sensor1;
+  loopInSetup();
+  
+  //sherden framework
+  //____________________________________________________________________________________________________________________
+                      {
+                      
+                      //deal with the corner case
+                            delay(100);// the TOF distance sensors need 90 ms to read
+                            read_multi_tof_sensors();
+                            //because sometimes train stop without recording the correct sensor1 value into previousDistanceSensor1
+                            previousDistanceSensor1 = sensor1;
+                            try2Recover();
+
+                      delay(100);// the TOF distance sensors need 90 ms to read
+                      read_multi_tof_sensors();
+                      previousDistanceSensor1 = sensor1;//assume the sensor1 laser beam is not barried at the very beginnings
+                      //but it is a corner case 
+                      loopInSetup();
+                      
+
+                      //test or some preaction
+                            //delay(100);// the TOF distance sensors need 90 ms to read
+                            //read_multi_tof_sensors();
+                            //previousDistanceSensor1 = sensor1;//assume the sensor1 laser beam is not barried at the very beginnings
+                            //but it is a corner case
+                            //moveForward(durationMoveTrain_table);//moveForward(durationMoveTrain_referPoint2jointPoint); in the setup() which means sensor1 310 joint point
+
+                            //delay(100);// the TOF distance sensors need 90 ms to read
+                            //read_multi_tof_sensors();
+                            //previousDistanceSensor1 = sensor1;//assume the sensor1 laser beam is not barried at the very beginnings
+                            //but it is a corner case
+                            //moveBackward(10000);
+
+
+                      delay(100);// the TOF distance sensors need 90 ms to read
+                      read_multi_tof_sensors();
+                      previousDistanceSensor1 = sensor1;//assume the sensor1 laser beam is not barried at the very beginnings
+                      //but it is a corner case
+                      
+                      }
+
+                      
+
+  Serial.println(F("Runtime"));                 
+  isRunTime = true;
+}
+
+//========================================================================================================================================================================
+void loop() {
+  //   Notice that none of the action happens in loop() apart from reading millis()
+  //   it just calls the functions that have the action code
+  
+  //initial
+  //____________________________________________________________________________________________________________________
+            //initialization();
+            currentMillis = millis();
+            //   capture the latest value of millis()
+            //   this is equivalent to noting the time from a clock
+            //   use the same time for all operators to keep them synchronized
+            //   in order to synchronize operators in each iteration of loop(), such as robot arm (servro1-6), a train (servo7)
+  
+  //read
+  //____________________________________________________________________________________________________________________
+            //user IO
+            readButton();//asynchronize, very fast
+            //sensors
+            isHere();//asynchronize, very fast
+            //
+            //
+            //
+                //essential sensors to control operators
+                read_multi_tof_sensors();//asynchronize, very fast
+                readRobot();
+                //Receive data returned by the robotic arm
+                //asynchronize, very fast
+
+  //analysis
+  //make decisions
+  //take actions //synchronize, normal
+  //____________________________________________________________________________________________________________________
+            run();
+           
+   //display //report to the PC or monitor
+   //____________________________________________________________________________________________________________________
+            //screen.draw(sensor3);//asynchronize, very slow
+
+  
+  //delay(100);// do not use delay() in the loop(), it will cause the currentMillis delay 100 ms, which could undermine the servo7 movement 100 * 0.0105 =  about 1 cm
+}
+
+//====================================================================================================================================================================
+void initialization() {
+                            //could be initialized again________________________
+                            durationMoveTrain_Max = (durationMoveTrain_referPoint2jointPoint + 30000) * 0.0105 / speedTrain;//56250;//45000;
+                            //dictionary:
+                            //the trashbin durationMoveTrain_Max, table 25000, the duration of train movement  
+                            durationMoveTrain_trashBin = durationMoveTrain_Max;
+                            durationMoveTrain_table = durationMoveTrain_referPoint2jointPoint + 10000;
+                            
+                            //could be initialized again________________________
+                            //assume servo7 is controlled by arduino board, Hiwonder robot arm board support it by providing energy and delivering information.
+                            isRunningTrain = false;
+                            //There are two methods to control the position of the train, servo7:
+                            //1. time setting
+                            //planned duration of the train Movement
+                            
+                            //reset the previousMoveServo7_timer
+                            previousMoveServo7_timer = 0;//it is not enough to use int // stores the value of currentMillis as the previousTimer for control the time of servo7 movement 
+                            allow2updatePreviousMoveServo7_timer = false;
+                            //2. distance setting.
+                            // through previousDistanceSensor1, by recording sensor1 value and comparing previous and current value, 
+                            //we can detect the movement accuracy or whether the sensor is barried.
+                            //integer distance;
+                            previousDistanceSensor1 = 0;
+                            sensor1 = 0;//train
+                            //previousDistanceSensor1 = sensor1; //update the previousDistanceSensor1 only if the sensor1 is working well and is not barried
+                            durationMoveTrain = 0;
+                            //unsigned short sensor2 = 0;
+                            sensor3 = 0;
+                            sensor4 = 0;
+                            distance = 0;//ultrasound sensor
+                            
+                            //Record the number of touches
+                            NumTouch = 0;
+                            //byte buttonLed_State = LOW;
+              
+              //could be initialized again________________________
+              read_multi_tof_sensors();
+              previousDistanceSensor1 = sensor1;//assume the sensor1 laser beam is not barried at the very beginnings
+              //but it is a corner case
+
+              //initial timers/counters
+              //________________________________
+                        currentMillis = millis();
+                        //   capture the latest value of millis()
+                        //   this is equivalent to noting the time from a clock
+                        //   use the same time for all operators to keep them synchronized
+                        //   in order to synchronize operators in each iteration of loop(), such as robot arm (servro1-6), a train (servo7)
+              //make sure the currentMillis > MAX(trainDuration, MAX(durationMoveTrain))
+              currentMillis = millis();
+              if (currentMillis <= durationMoveTrain_Max) {
+                unsigned int temp = durationMoveTrain_Max - currentMillis + 100;//unsigned int ////0 - (2^32 - 1)
+                //Serial.print(F("Initializing system for "));
+                //Serial.print(temp/1000);
+                //Serial.println(F(" seconds"));
+                //delay(temp);
+                currentMillis = millis();
+              } else {//currentMillis > durationMoveTrain_Max
+                //skip
+              }
+}
+//========================================================================================================================================================================
+void run() {
+  //analysis
+  //make decisions
+  //take actions //synchronize, normal
+  //____________________________________________________________________________________________________________________
+  //initial
+  static unsigned long previousMillis_timer;//set loop check clock //unsigned long
+  if(previousMillis_timer <= currentMillis - trainDuration)
+  { 
+              previousMillis_timer += trainDuration;
+              {
+                          if (NumTouch >= 1 && NumTouch <=4 ) {
+           
+                                                                    //Override the value of durationMoveTrain
+                                                                    //if (durationMoveTrain < trainDuration) {
+                                                                    //1000;//define the smallest step distance//resolution
+                                                                    //    durationMoveTrain = trainDuration;
+                                                                    //} else {
+                                                                    //    //skip
+                                                                    //}
+                                                                    durationMoveTrain = durationMoveTrain_Max;//durationMoveTrain = NumTouch * 1000;
+                                                                    
+                                                                    Serial.println(F("button1/2/3/4"));
+                                                                    Serial.println(durationMoveTrain);
+                                                                    //byte isFirst = 1;
+                                                                    allow2updatePreviousMoveServo7_timer = true;//unlock
+                                                                    while(1) {
+                                                                                        currentMillis = millis();                                                    
+
+                                                                                                                       
+
+                                                                                                                       moveForward(durationMoveTrain);//initTrain(sensor1);
+                                                                                                                                                                                                                                                                                                             
+                                                                                                                       //update the previousDistanceSensor1 only if the sensor1 is working well and is not barried
+                                                                                                                       if (previousDistanceSensor1 < sensor1) {
+                                                                                                                            previousDistanceSensor1 = sensor1;          
+                                                                                                                       } else {//previousDistanceSensor1 >= sensor1
+                                                                                                                            //skip
+                                                                                                                       }
+                                                                                          
+                                                                                          
+
+
+                                                                    
+                                                                       if (!isRunningTrain) {break;}
+                                                                    }
+                                                                    
+                                                                    /*
+                                                                    isRunTime = false;                      
+                                                                          //delay(100);// the TOF distance sensors need 90 ms to read
+                                                                          moveForward(durationMoveTrain);
+                                                                          read_multi_tof_sensors();
+                                                                          //delete the sentence below after the test !!!!!!!!!
+                                                                          previousDistanceSensor1 = sensor1;//assume the sensor1 laser beam is not barried at the very beginnings
+                                                                          //but it is a corner case            
+                                                                    isRunTime = true;
+                                                                    */
+
+                                                                                                    
+                                                                    NumTouch = 0;
+                          } else {
+                              if (NumTouch >= 5 && NumTouch <= 6) {
+                                                                    
+
+                                                                    if (NumTouch == 5) {//5s
+                                                                                                      isRunTime = false;
+                                                                                                            //delay(100);// the TOF distance sensors need 90 ms to read
+                                                                                                            moveForward(5000); //in the setup() which means sensor1 310 joint point//moveForward(durationMoveTrain_table);
+                                                                                                            read_multi_tof_sensors();
+                                                                                                            //delete the sentence below after the test !!!!!!!!!
+                                                                                                            previousDistanceSensor1 = sensor1;//assume the sensor1 laser beam is not barried at the very beginnings
+                                                                                                            //but it is a corner case
+                                                                                                      isRunTime = true;
+
+                                                                                                      
+                                                                    } else {//(NumTouch == 6)  //15s
+                                                                                                      isRunTime = false;
+                                                                                                            //delay(100);// the TOF distance sensors need 90 ms to read
+                                                                                                            moveForward(15000); //in the setup() which means sensor1 310 joint point//moveForward(durationMoveTrain_table);
+                                                                                                            read_multi_tof_sensors();
+                                                                                                            //delete the sentence below after the test !!!!!!!!!
+                                                                                                            previousDistanceSensor1 = sensor1;//assume the sensor1 laser beam is not barried at the very beginnings
+                                                                                                            //but it is a corner case
+                                                                                                      isRunTime = true;
+                                                                    }
+                                                                    Serial.println(F("button5/6"));
+
+                                                                    NumTouch = 0;
+
+                              } else {
+                                if (NumTouch >= 7 && NumTouch <= 8) {
+                                                                    Serial.println(F("button7/8"));
+                                                                    
+                                                                    //switch between the original reference point and new reference point
+                                                                    if (NumTouch == 7) {
+                                                                                              
+                                                                                              //set the joint point as the reference point
+                                                                                              //previous time variable keeps when visited joint point, the time as the reference when robot move forward after the point
+                                                                                              referencePoint = jointPoint;
+                                                                                              //durationMoveTrain_referPoint2jointPoint was the basis, it is 0 now
+                                                                                              durationMoveTrain_referPoint2jointPoint = 0;
+                                                                                              initialization();
+                                                                    } else {//NumTouch == 8
+                                                                                              //set 145 as the reference point
+                                                                                              referencePoint = 145;
+                                                                                              durationMoveTrain_referPoint2jointPoint = 15000;
+                                                                                              initialization();
+                                                                                                                                                                    
+                                                                    }
+
+                                                                    NumTouch = 0;
+
+                                                                    
+                          
+                                } else {//NumTouch == 0 or NumTouch > 8
+                                                                    //default
+                                                                    Serial.println(F("button0"));
+                                                                    initTrain(sensor1);
+                          
+                          
+                                }
+                              }
+                          }
+              }
+
+
+  }
+}
+
+//========================================================================================================================================================================
+void loopInSetup() {
+  //simplified loop()
+  //corner case: can not detect the barrier
+  //if there is barrier between sensor1 and train, train will moveforward without stop
+        isRunTime = true;
+        //for (unsigned short i = 65535; i > 0; i--) {}//this is not 65536, which causes overflow.
+        while(1) {
+                              //initial
+                              //____________________________________________________________________________________________________________________
+                                        //initialization();
+                                        currentMillis = millis();
+                                        //   capture the latest value of millis()
+                                        //   this is equivalent to noting the time from a clock
+                                        //   use the same time for all operators to keep them synchronized
+                                        //   in order to synchronize operators in each iteration of loop(), such as robot arm (servro1-6), a train (servo7)
+                              //read
+                              //____________________________________________________________________________________________________________________
+                                        readRobot();
+                                        //Receive data returned by the robotic arm
+                                        //asynchronize, very fast
+                                        //delay(100);// the TOF distance sensors need 90 ms to read
+                                        read_multi_tof_sensors();
+                            
+                              //analysis
+                              //make decisions
+                              //take actions
+                              //____________________________________________________________________________________________________________________
+                                        //initalize operators
+                                                    robotController.runActionGroup(0, 1); 
+                                                    //initialize train
+                                                                initTrain(sensor1);
+                                                                if (!isRunningTrain) {break;}  
+                                                                //delay(trainDuration);
+                                                                delay(300);
+        }
+
+        
+        isRunTime = false;
+}
+
+//========================================================================================================================================================================
+void readRobot() {
+  unsigned short robotInterval = 100;
+  static unsigned long previousButtonMillis_timer;//unsigned long
+  if (previousButtonMillis_timer <=  millis() - robotInterval) {// currentMillis = millis() - robotInterval
+        previousButtonMillis_timer += robotInterval;
+        robotController.receiveHandler();
+  }
+  
+}
+
+//========================================================================================================================================================================
+void try2Recover() {
+//sensor1 < sensor1_Min || durationMoveTrain > durationMoveTrain_Max
+  //normally it is not allowed to move over durationMoveTrain_Max or under sensor1_Min
+  //no sensor signal available
+  //but let us try to go back to the reference point, sensor1 145
+    if (durationMoveTrain > durationMoveTrain_Max && sensor1 <= 710) {
+                                                            durationMoveTrain = durationMoveTrain_referPoint2jointPoint;
+                                                            allow2updatePreviousMoveServo7_timer = true;//unlock
+                                                            moveBackward(durationMoveTrain);
+                                                            //not update// it is not correct //previousDistanceSensor1 = sensor1; //update the previousDistanceSensor1 only if the sensor1 is working well and is not barried
+                                                            //difference
+    } else {
+                if (sensor1 >= 0 && sensor1 < sensor1_Min) {
+                                                            durationMoveTrain = (referencePoint - sensor1_Min)/ speedTrain;////assume
+                                                            allow2updatePreviousMoveServo7_timer = true;//unlock
+                                                            moveForward(durationMoveTrain); 
+                                                             //update the previousDistanceSensor1 only if the sensor1 is working well and is not barried
+                                                             if (previousDistanceSensor1 < sensor1) {
+                                                                  previousDistanceSensor1 = sensor1;          
+                                                             } else {//previousDistanceSensor1 >= sensor1
+                                                                  //skip
+                                                             }
+                                                            //difference
+                } else {
+                                                            //(sensor1 < 0 || sensor > 710) // too close || over far 
+                                                            //genearlly it is impossible to reach that close or far, meaning it could be some bugs or noise
+                                                                        //skip or ignore                                        
+                }
+    }
+    
+}
+//========================================================================================================================================================================
+void readButton() {
+
+          // ask
+          // this only reads the button state after the button interval has elapsed
+          // this avoids multiple flashes if the button is pressed
+          // Notice that there is no need to synchronize this, using millis() instead of currentMillis
+          // use of millis() with the flashing Leds
+          // every time the button is pressed it changes buttonLed_State causing:
+          static byte step;//0 - 255
+          static byte NumTouchLocal = 0;
+          static unsigned short count;//0 - 65535
+          static unsigned long previousButtonMillis_timer;
+          unsigned short buttonInterval = 1;//10;//100;//500 //200;//300
+
+
+          //if (robotController.isRunning())
+          //  return;
+          //if (isRunningTrain)
+          //  return;
+/*
+
+          if (previousButtonMillis_timer <=  millis() - buttonInterval) {// currentMillis = millis() - buttonInterval
+            
+                      //if (digitalRead(buttonPin) != LOW) {
+                              //delay(80);
+                              if (digitalRead(buttonPin) == LOW) {
+                                        previousButtonMillis_timer += buttonInterval;
+                                        
+                                        Serial.println(F("button"));
+                                        Serial.println(NumTouchLocal);
+                                        NumTouchLocal++;
+                                        if (NumTouchLocal > 2) {NumTouchLocal = 1;}
+                                        //buttonLed_State = ! buttonLed_State; //   this changes it to low if it was high
+                                                                             //   and to high if it was low
+                              }
+        
+                      //}
+        
+          }
+*/
+          if (previousButtonMillis_timer <=  millis() - buttonInterval) {// currentMillis = millis() - buttonInterval
+                      switch(step)
+                      {
+                        case 0:
+                          if (digitalRead(buttonPin) == LOW)
+                          {//Detection touch sensor
+                            digitalWrite(LED, HIGH);
+                            delay(400);
+                            if (digitalRead(buttonPin) != LOW)
+                            {//If it is short press once
+                              digitalWrite(LED, LOW);
+                              NumTouchLocal ++ ;
+                              count = 0;
+                              step = 1;
+                              previousButtonMillis_timer += buttonInterval;
+                            }
+                          }
+                          break;
+                        case 1:
+                          if (digitalRead(buttonPin) == LOW)
+                          {//Detection touch sensor
+                            digitalWrite(LED, HIGH);
+                            delay(400);
+                            if (digitalRead(buttonPin) != LOW)
+                            {//If it is short touch once
+                              NumTouchLocal ++ ;       
+                              digitalWrite(LED, LOW);
+                              if (NumTouchLocal > 9)
+                              NumTouchLocal = 9;
+                              count = 0;
+                              previousButtonMillis_timer += buttonInterval;
+                            }
+                          }
+                          else
+                          {
+                            count++;
+                            if (count > 10)
+                            {
+                              step = 2;
+                              count = 0;
+                            }
+                            else
+                            {
+                              previousButtonMillis_timer += buttonInterval;
+                            }
+                          }
+                          break;
+                        case 2:
+                          //output NumTouchLocal
+                          NumTouch = NumTouchLocal;
+                          count++;
+                          if (count > 1)  
+                          {
+                            count = 0;
+                            NumTouchLocal = 0;
+                            step = 0;
+                          }
+                          break;
+                        default:
+                          NumTouchLocal = 0;
+                          count = 0;
+                          step = 0;
+                          break; 
+                      }
+                      Serial.println(F("button"));
+                      Serial.println(NumTouchLocal);
+          }
+
+}
+
+//========================================================================================================================================================================
+bool isHere()
+{ //ultrasound sensor
+  static unsigned long previousMillis_timer;
+  unsigned short sensorInterval = 100;
+  bool isHere = false;
+  if (previousMillis_timer <=  millis() - sensorInterval)// currentMillis - sensorInterval could be != millis() - sensorInterval
+  {
+    previousMillis_timer += sensorInterval;//synchronize, besides, set clock
+    distance=((short)ultrasound.GetDistance())/10; //unsigned short
+    //Serial.println(distance); //Get and print distance of serial port, unit mm
+    //if (robotController.isRunning() == false) //Execute when the robotic arm stop running
+    {
+      if (distance <= 10)
+      {
+          isHere = true;
+          ultrasound.rainbow_color();
+      } else {//>10
+          ultrasound.Color(0, 255, 0, 0, 255, 0); //green
+      }
+    }
+
+  }
+}
+
+//========================================================================================================================================================================
+void setID() {
+  // all reset
+  digitalWrite(SHT_LOX1, LOW);    
+  digitalWrite(SHT_LOX2, LOW);
+  digitalWrite(SHT_LOX3, LOW);
+  digitalWrite(SHT_LOX4, LOW);
+  delay(10);
+  // all unreset
+  digitalWrite(SHT_LOX1, HIGH);
+  digitalWrite(SHT_LOX2, HIGH);
+  digitalWrite(SHT_LOX3, HIGH);  
+  digitalWrite(SHT_LOX4, HIGH);
+  delay(10);
+
+  // activating LOX1 and reseting LOX2
+  digitalWrite(SHT_LOX1, HIGH);
+  digitalWrite(SHT_LOX2, LOW);
+  digitalWrite(SHT_LOX3, LOW);
+  digitalWrite(SHT_LOX4, LOW);
+
+  /*
+  // initing LOX1
+  Wire.begin();//This function initializes the Wire library
+  lox1.setAddress(LOX1_ADDRESS);//set address//
+  if(!lox1.init()) {
+    Serial.println(F("Failed to boot first VL53L0X"));
+    //while(1);
+  }
+  */
+  // initing LOX1
+  if(!lox1.begin(LOX1_ADDRESS, false, &Wire, 3)) {
+    //Serial.println(F("Failed to boot first VL53L0X, LOX1"));
+    //while(1);
+  }
+  delay(10);
+
+  // activating LOX2
+  digitalWrite(SHT_LOX2, HIGH);
+  delay(10);
+
+  //initing LOX2
+  //Wire.begin();//This function initializes the Wire library
+  //default//lox2.setAddress(LOX2_ADDRESS);//set address//
+  //if(!lox2.init()) {
+  //  Serial.println(F("Failed to boot second VL53L0X"));
+    //while(1);
+  //}
+
+
+  // activating LOX3
+  digitalWrite(SHT_LOX3, HIGH);
+  delay(10);
+
+  //initing LOX3
+  Wire.begin();//This function initializes the Wire library
+  lox3.setAddress(LOX3_ADDRESS);//set address//
+  if(!lox3.init()) {
+    //Serial.println(F("Failed to boot third VL53L0X, LOX3"));
+    //while(1);
+  }
+  //lox3.setMeasurementTimingBudget(sensor1_Min);
+  //a longer timing budget allows for more accurate measurements. 
+
+  // activating LOX4
+  digitalWrite(SHT_LOX4, HIGH);
+  delay(10);
+
+  //initing LOX4
+  Wire.begin();//This function initializes the Wire library
+  lox4.setAddress(LOX4_ADDRESS);//set address//
+  if(!lox4.init()) {
+    //Serial.println(F("Failed to boot fourth VL53L0X, LOX4"));
+    //while(1);
+  }
+}
+
+//========================================================================================================================================================================
+void read_multi_tof_sensors() {
+  // the TOF distance sensors need 90 ms to read
+  //asynchronize, very fast
+  static unsigned long previousMillis_timer;
+  unsigned short sensorInterval = 100; //short
+  if (previousMillis_timer < millis() - sensorInterval)// currentMillis - sensorInterval could be != millis() - sensorInterval
+  {
+    previousMillis_timer += sensorInterval;//set clock
+  //make sure that the sensor value is number instaed of some mysterious string
+              // this holds the measurement
+              VL53L0X_RangingMeasurementData_t measure1;
+            
+              lox1.rangingTest(&measure1, false); // pass in 'true' to get debug data printout!
+              // print sensor1 reading
+              Serial.print(F("1: "));
+              if(measure1.RangeStatus != 4) {     // if not out of range
+                sensor1 = measure1.RangeMilliMeter;    
+                Serial.print(sensor1);
+                //Serial.print(F("mm"));    
+              } else {
+                //Serial.print(F("Out of range"));
+              }
+              /*
+              Serial.print(F("1: "));
+                Serial.print(lox1.readRangeSingleMillimeters());
+                Serial.print(F("mm"));    
+              */
+              
+              //Serial.print(F(" "));
+            
+              // print sensor2 reading
+              //Serial.print(F("2: "));
+              //  Serial.print(lox2.readRangeSingleMillimeters());
+              //  Serial.print(F("mm"));
+            
+              Serial.print(F(" "));
+            
+              // print sensor3 reading
+              Serial.print(F("3: "));
+              sensor3 = lox3.readRangeSingleMillimeters();
+              Serial.print(sensor3);
+              //Serial.print(F("mm"));
+              
+              Serial.print(F(" "));
+            
+              // print sensor4 reading
+              Serial.print(F("4: "));
+              sensor4 = lox4.readRangeSingleMillimeters();
+                Serial.print(sensor4);
+                //Serial.print(F("mm"));
+                
+              Serial.println();
+  }
+            
+}
+
+//========================================================================================================================================================================
+bool isBarriedSensor1() {
+  //asynchronize
+  //static unsigned long previousMillis_timer;
+  //unsigned short sensorInterval = 100;
+  bool isBarried = false;//sensor laser beam is not barried
+  //unsigned long difference;
+  // if (previousMillis_timer <= millis() - sensorInterval)// currentMillis - sensorInterval could be != millis() - sensorInterval
+  //{
+   // previousMillis_timer += sensorInterval;//set clock // previousMillis_timer = previousMillis_timer + sensorInterval;    
+                          //double check whether we need to update the durationMoveTrain
+                          //sensor1 is not stuck
+                          //assume the sensor1 value will not stuck in a constant value when the robot arm moves
+                          //assumw the pet will not stand between the sensor and the robot arm
+                          //delay(100);
+                          //sensor1 has been updated
+                          //previousDistanceSensor1 is still the same as above in the function
+                          //952 > 100 no need to update previousMillis_timer//1000;//no need 120;
+
+                          if (isRunningTrain) { //train is moving
+                            short temp = previousDistanceSensor1 - sensor1;
+                            Serial.println(F("previousDistanceSensor1"));
+                            Serial.println(previousDistanceSensor1);
+                            Serial.println(F("sensor1"));
+                            Serial.println(sensor1);
+                            Serial.println(F("difference"));
+                            Serial.println((short)abs2((long)temp));//abs() can only be used for integer
+                            Serial.println(F("2 * trainDuration * speedTrain"));
+                            Serial.println(2 * trainDuration * speedTrain);
+                                                                        //if is barried, the difference > 0
+                                                                        if ((previousDistanceSensor1 > sensor1) && (short)abs2((long)temp) > barrierIndex * trainDuration * speedTrain) {  //(referencePoint + 2 - sensor1_Min) = 47
+                                                                        //abs() can only be used for integer
+                                                                        //difference >  2 * trainDuration * speedTrain
+                                                                        //case1: sensor1 is barried by pet or something else
+                                                                        //because of sensor stuck 
+                                                                        //due to the barrier
+                                                                                  isBarried = true;
+                                                                        } else {//difference 
+                                                                                  //skip
+                                                                        }
+                          } else {//!isRunningTrain
+                                                                         //corner case
+                                                                         //skip
+                                                                         //
+                          }
+                          return isBarried;
+  //}
+}
+
+//train move forward (to the right side on the picture):
+//========================================================================================================================================================================
+void moveForward(unsigned int durationMoveTrain) {
+  if (isRunTime) {
+        static unsigned long previousMillis_timer;//set loop check clock
+        if(previousMillis_timer <= currentMillis - trainDuration)
+        { 
+          previousMillis_timer += trainDuration;
+          //synchronize, besides, set clock
+          //1000;// no need 250;
+
+              //protection:
+              //moveForward(durationMoveTrain_Max); allowed max distance //moveForward(durationMoveTrain_referPoint2jointPoint); in the setup() which means sensor1 310 joint point
+              //previousDistanceSensor1 = sensor1; //update the previousDistanceSensor1 only if the sensor1 is working well and is not barried
+              //sensor1     sensor1_Min     allowed min distance
+              //reference point: 145 (143 - 147 is fine) 
+              if (durationMoveTrain <= durationMoveTrain_Max) {
+                      //Serial.println(allow2updatePreviousMoveServo7_timer);
+                      if (allow2updatePreviousMoveServo7_timer) {
+                      //start
+                              allow2updatePreviousMoveServo7_timer = false;//lock
+                              //default//allow2updatePreviousMoveServo7_timer = false;//lock
+                              previousMoveServo7_timer = currentMillis;
+                              //Serial.println(F("previousMoveServo7_timer"));
+                              //Serial.println(previousMoveServo7_timer);
+                              //synchronize
+                              // capture the latest value of currentMillis
+                                                    //   this is equivalent to noting the time from a clock
+                                                    //   use the same time for all servo 7 movements to keep them synchronized
+                  
+                              robotController.moveServo(7, 515, 1000);//set speed
+                              isRunningTrain = true;
+                              //Serial.println(F("currentMillis - previousMoveServo7_timer"));
+                              //Serial.println(currentMillis - previousMoveServo7_timer);
+                              //Serial.println(durationMoveTrain);
+                      } else {//!allow2updatePreviousMoveServo7_timer
+                              if (currentMillis - previousMoveServo7_timer > durationMoveTrain) {// only no sensor signal case, we guess
+                                stopTrain();
+                                //it could be wrong// previousDistanceSensor1 = sensor1;
+                              } else {//durationMoveTrain_accumulationActual <= durationMoveTrain
+                                //skip//do nothing 
+                              }
+                      }
+              } else {//durationMoveTrain > durationMoveTrain_Max
+                    //skip //do nothing}
+              }
+        } else {//
+              //skip//do nothing   
+        }
+  } else {//set up
+        //protection:
+        //moveForward(durationMoveTrain_Max); allowed max distance //moveForward(durationMoveTrain_referPoint2jointPoint); in the setup() which means sensor1 310 joint point
+        //previousDistanceSensor1 = sensor1; //update the previousDistanceSensor1 only if the sensor1 is working well and is not barried
+        //sensor1     sensor1_Min     allowed min distance
+        //reference point: 145 (143 - 147 is fine) 
+        if (durationMoveTrain <= durationMoveTrain_Max) {
+                    robotController.moveServo(7, 515, 1000);//set speed
+                    isRunningTrain = true;
+                    delay(durationMoveTrain);
+                    stopTrain();
+                    //!!!!!delete the sentence below when we finish the test
+                    previousDistanceSensor1 = sensor1;//assume the sensor1 laser beam is not barried at the very beginnings
+                    //it could be wrong// previousDistanceSensor1 = sensor1;
+        } else {//durationMoveTrain > durationMoveTrain_Max
+                    //skip //do nothing
+        }
+  }
+
+}
+
+//========================================================================================================================================================================
+//Moving train to the reference point is its function
+//moveBackward(), if the robot is on the right side of the reference point
+//moveForward(), if the robot is on the left side of the reference point
+bool initTrain(unsigned short sensor1) {
+  //moving the robot arm platform to the reference point is the function
+  //normally, it is used in the runtime, loop()
+  //initial
+  static unsigned long previousMillis_timer;//set loop check clock
+  bool isDone = false;
+  if(previousMillis_timer <= currentMillis - trainDuration)
+  { 
+    previousMillis_timer += trainDuration;
+    //synchronize, besides, set clock
+    //1000;//no need 120;
+                      //Serial.println(F("sensor1"));                                                              
+                      //Serial.println(sensor1);
+                      //Serial.println(F("previousDistanceSensor1"));
+                      //Serial.println(previousDistanceSensor1);      
+                      if (sensor1 >= referencePoint - 2 && sensor1 <= referencePoint + 2) {//about 145
+                      //stop
+                            isDone = true;
+                            stopTrain();
+                            //it could be wrong// previousDistanceSensor1 = sensor1;
+                            return isDone;
+                      } else {// sensor1 < referencePoint - 2 || sensor1 > referencePoint + 2
+                        //Serial.println(F("sensor1 < referencePoint - 2 || sensor1 > referencePoint + 2"));
+                                              //move train only if the sensor value is from sensor1 0 to 710
+                                              //protection:
+                                              //moveForward(durationMoveTrain_Max); allowed max distance //moveForward(durationMoveTrain_referPoint2jointPoint); in the setup() which means sensor1 310 joint point
+                                              //previousDistanceSensor1 = sensor1; //update the previousDistanceSensor1 only if the sensor1 is working well and is not barried
+                                              //sensor1     sensor1_Min     allowed min distance
+                                              //reference point: 145 (143 - 147 is fine) 
+                                              //trainDuration = (147 - 143)/ speedTrain = 595.24 ms
+                                              short temp = sensor1 - referencePoint;//unsigned short
+                                              //Serial.println(F("sensor1 - referencePoint"));
+                                              //Serial.println(temp);
+                                              //durationMoveTrain = (targetedPoint - referencePoint) / speedTrain;
+                                              durationMoveTrain = (int)(abs2((long)temp)/speedTrain);//abs() can only be used for integer //unsigned int
+                                              //Serial.println(F("durationMoveTrain"));
+                                              //Serial.println(durationMoveTrain);
+                                              if (sensor1 >= sensor1_Min && durationMoveTrain <= durationMoveTrain_Max) {
+
+                                                                      //Serial.println(F("isBarried: "));
+                                                                      //Serial.println(isBarriedSensor1());
+                                                                      if (isBarriedSensor1()) {
+                                                                      //assume the train is moving
+                                                                      //case1: sensor1 is barried by pet or something else
+                                                                      //the reference point calculated during the runtime is wrong due to barrier
+                                                                      //but it is fine, after the pet move away, the reference pint will be recalculated and corrected.
+                                                                                              //Serial.println(F("isB"));
+                                                                                              stopTrain();
+                                                                                              //it could be wrong// previousDistanceSensor1 = sensor1;
+                                                                                              //assume the train is moving, just have to wait for pet leaving there.
+                                                                                              isRunningTrain = 1;
+                                                                                              /*
+                                                                                              if (isRunningTrain) {
+                                                                                                
+                                                                                              } else {//!isRunningTrain
+                                                                                                
+                                                                                              }
+                                                                                              */
+                                                                      } else {//!isBarriedSensor1()
+
+                                                                                                        //durationMoveTrain can be used to show the big picture, while it could not be accurate when train is far from joint point                                                                                                        
+                                                                                                        if (sensor1 > jointPoint && durationMoveTrain <= durationMoveTrain_Max) {
+                                                                                                                                //synchronize
+                                                                                                                                unsigned int durationMoveTrain_remainingPlanned = (int)abs2(currentMillis - previousMoveServo7_timer);//abs() can only be used for integer
+                                                                                                                                Serial.println(F("currentMillis"));
+                                                                                                                                Serial.println(currentMillis);
+                                                                                                                                Serial.println(F("previousMoveServo7_timer"));
+                                                                                                                                Serial.println(previousMoveServo7_timer);
+                                                                                                                                Serial.println(F("durationMoveTrain_remainingPlanned"));
+                                                                                                                                Serial.println(durationMoveTrain_remainingPlanned);
+                                                                                                                                Serial.println(F("durationMoveTrainBeforeOverride"));
+                                                                                                                                Serial.println(durationMoveTrain);
+                                                                                                                                //check the difference between scheduled(the previous loop) remaining and actual(the currunt loop)
+                                                                                                                                //if the variance between differenceDuration and trainDuration is too large, meaning the speed is very unstable or the sensor1 is very unaccurate
+                                                                                                                                unsigned int differenceDuration = abs(durationMoveTrain_remainingPlanned - durationMoveTrain);//abs() can only be used for integer
+                                                                                                                                Serial.println(F("differenceDuration"));
+                                                                                                                                Serial.println(differenceDuration);
+                                                                                                                                Serial.println("trainDuration");
+                                                                                                                                Serial.println(trainDuration);
+                                                                                                                                //Through the test, we found it is because the sensor1 is not accurate in this case
+                                                                                                                                //Therefore, give up to control precisely the position through the sensor1 in the case
+                                                                                                                                //Override the value of durationMoveTrain
+                                                                                                                                durationMoveTrain = durationMoveTrain_referPoint2jointPoint;
+                                                                                                                                Serial.println(durationMoveTrain);
+                                                                                                                                // corner case if the runtime is smaller than the calculated durationMoveTrain at the very beginning, settng clock will be missed
+                                                                                                                                //check the difference between scheduled(the previous loop) remaining and actual(the currunt loop)
+                                                                                                                                if (durationMoveTrain_remainingPlanned < durationMoveTrain) {
+                                                                                                                                //(abs(durationMoveTrain_remainingPlanned) < durationMoveTrain)//set clock ////abs() can only be used for integer
+                                                                                                                                //abs() can only be used for integer
+                                                                                                                                                //Serial.println(F("bigger asdfsdsff"));
+                                                                                                                                                //skip or continue to move
+                                                                                                                                                //small deviation or vibration is acceptable
+                                                                                                                                } else {//durationMoveTrain_remainingPlanned >= durationMoveTrain
+                                                                                                                                                //Serial.println(F("bigger jointPointfsdfsdfsdfsdf"));
+                                                                                                                                                allow2updatePreviousMoveServo7_timer = true;//unlock
+                                                                                                                                                moveBackward(durationMoveTrain);
+                                                                                                                                }
+                                                                                                                                               //update the previousDistanceSensor1 only if the sensor1 is working well and is not barried
+                                                                                                                                               if (previousDistanceSensor1 > sensor1) {
+                                                                                                                                                    previousDistanceSensor1 = sensor1;          
+                                                                                                                                               } else {//previousDistanceSensor1 <= sensor1
+                                                                                                                                                    //skip
+                                                                                                                                               }
+
+
+
+
+                                                                                                        } else {
+                                                                                                              //sensor1_Min <= sensor1 < referencePoint - 2 || referencePoint + 2 < sensor1 <= jointPoint
+                                                                                                                                //case2: sensor1 is not accurate(the value is too big or too small) during the previous loop period
+                                                                                                                                //accurate control
+                                                                                                                                short temp = previousDistanceSensor1 - sensor1;
+                                                                                                                                unsigned short differenceDistance = (short)abs2((long)temp);
+                                                                                                                                //Serial.println(F("sensor1_Min <= sensor1 < referencePoint - 2 || referencePoint + 2 < sensor1 <= jointPoint"));
+                                                                                                                                //Serial.println(F("previousDistanceSensor1"));
+                                                                                                                                //Serial.println(previousDistanceSensor1);
+                                                                                                                                //Serial.println(F("differenceDistance"));
+                                                                                                                                //Serial.println(differenceDistance);
+                                                                                                                                //Serial.println(F("trainDuration * speedTrain * (1 - safeIndex)"));
+                                                                                                                                //Serial.println(trainDuration * speedTrain * (1 - safeIndex));
+                                                                                                                                //Serial.println(F("trainDuration * speedTrain * (1 + safeIndex)"));
+                                                                                                                                //Serial.println(trainDuration * speedTrain * (1 + safeIndex));
+                                                                                                                                //if (differenceDistance >= trainDuration * speedTrain * (1 - safeIndex)  && differenceDistance <= trainDuration * speedTrain * (1 + safeIndex) ) {
+                                                                                                                                
+                                                                                                                                //idealy, the speed of train is stable,
+                                                                                                                                //the distance difference per duration = trainDuration * speedTrain //(147 - 143) = 5 //10 //10.5                                                                                                                                
+                                                                                                                                //Besides, considering the sensor value deviation.                                                                                                                                 
+                                                                                                                                //sensor1 value could be floating between expectedValue - 1 to expectedValue + 1
+                                                                                                                                //(592 * 0.0084 * 0.7 = 3.4810, center = 592 * 0.0084 = 5, 592 * 0.0084 * 1.3 = 6.4646)                                                                                                                                
+                                                                                                                                //nevertheless, the actual speed is a little high,
+                                                                                                                                //592 * 0.0105 = 6.2160, it is very close to the upper boundary,
+                                                                                                                                //therefore, how about 0.7 as upper-band safeindex, 592 * 0.0084 * 1.7 = 8.4538
+                                                                                                                                if (differenceDistance >= trainDuration * speedTrain * (1 - safeIndex)  && differenceDistance <= trainDuration * speedTrain * (1.7) ) {
+                                                                                                                                                              //Serial.println(F("less jointPoint durationMoveTrain_Max0skip"));
+                                                                                                                                                              //continue to move
+                                                                                                                                                              //small deviation or vibration is acceptable
+                                                                                                                                                              previousDistanceSensor1 = sensor1;
+                                                                                                                                                              //update it only if distance is correct which means no barrier
+                                                                                                                                } else { //it could stop (differenceDistance < trainDuration * speedTrain * (1 - safeIndex))  or not in the range
+                                                                                                                                                               //reset
+                                                                                                                                                      //Override the value of durationMoveTrain
+                                                                                                                                                      if (durationMoveTrain < trainDuration) {
+                                                                                                                                                      //1000;//define the smallest step distance//resolution
+                                                                                                                                                          durationMoveTrain = trainDuration;
+                                                                                                                                                      } else {
+                                                                                                                                                          //skip
+                                                                                                                                                          
+                                                                                                                                                      }
+                                                                                                                                                      
+                                                                                                                                                               allow2updatePreviousMoveServo7_timer = true;
+                                                                                                                                                               if (sensor1 > referencePoint + 2) {
+                                                                                                                                                                //Serial.println(F("sensor1 > referencePoint + 2 movef"));
+                                                                                                                                                               //if (sensor1 > referencePoint + 2 && sensor1 <= jointPoint) {}//joint
+                                                                                                                                                                                         moveBackward(durationMoveTrain);//set clock
+                                                                                                                                                                                         //update the previousDistanceSensor1 only if the sensor1 is working well and is not barried
+                                                                                                                                                                                         if (previousDistanceSensor1 > sensor1) {
+                                                                                                                                                                                              previousDistanceSensor1 = sensor1;          
+                                                                                                                                                                                         } else {//previousDistanceSensor1 <= sensor1
+                                                                                                                                                                                              //skip
+                                                                                                                                                                                         }
+                                                                                                                                                  
+                                                                                                                                                               } else {//< referencePoint - 2
+                                                                                                                                                                //Serial.println(F("< referencePoint - 2moveForward"));
+                                                                                                                                                               //if (sensor1 >= sensor1_Min && sensor1 < referencePoint - 2) {}
+                                                                                                                                                                                          moveForward(durationMoveTrain);//set clock ////case1:
+                                                                                                                                                                                         //update the previousDistanceSensor1 only if the sensor1 is working well and is not barried
+                                                                                                                                                                                         if (previousDistanceSensor1 < sensor1) {
+                                                                                                                                                                                              previousDistanceSensor1 = sensor1;          
+                                                                                                                                                                                         } else {//previousDistanceSensor1 >= sensor1
+                                                                                                                                                                                              //skip
+                                                                                                                                                                                         }
+                                        
+                                        
+                                                                                                                                                               }
+                                                                                                                                }
+                
+                                            
+                                                            
+                                                                                                        }
+                                                                                              
+
+                                                                      }
+
+                      
+                                        
+                                              } else {
+                                              //sensor1 < sensor1_Min || durationMoveTrain > durationMoveTrain_Max
+                                              //normally it is not allowed to move over durationMoveTrain_Max or under sensor1_Min
+                                              //no sensor signal available
+                                              //Serial.println(F("sensor1 < sensor1_Min || durationMoveTrain > durationMoveTrain_Max"));
+                                                                      stopTrain();
+                                                                      if (sensor1 >= 0 && sensor1 < sensor1_Min) {
+                                                                                       //update the previousDistanceSensor1 only if the sensor1 is working well and is not barried
+                                                                                       if (previousDistanceSensor1 < sensor1) {
+                                                                                            previousDistanceSensor1 = sensor1;          
+                                                                                       } else {//previousDistanceSensor1 >= sensor1
+                                                                                            //skip
+                                                                                       }
+
+                                                                      }
+                                              }
+                                    
+
+
+
+                      }
+
+ //Serial.println('loop');
+      return isDone;//-1//false//while(1);
+  }
+}
+
+//=======================================================================================================================================================================
+unsigned long abs2(long temp) {
+  unsigned long result;
+        //traditional abs() can only be used for integer
+        if (temp >= 0) {
+                result = temp;
+        } else {//temp <= 0
+                result = 0 - temp;
+        }
+
+        return result;
+}
+ 
+//train move backward (to the left side):
+//========================================================================================================================================================================
+void moveBackward(unsigned int durationMoveTrain) {
+  if (isRunTime) {
+      static unsigned long previousMillis_timer;//set loop check clock
+      if(previousMillis_timer <= currentMillis - trainDuration)
+      { 
+        previousMillis_timer += trainDuration;
+        //synchronize, besides, set clock
+        //1000;// no need 250;
+              //protection:
+              //moveForward(durationMoveTrain_Max); allowed max distance //moveForward(durationMoveTrain_referPoint2jointPoint); in the setup() which means sensor1 310 joint point
+              //previousDistanceSensor1 = sensor1; //update the previousDistanceSensor1 only if the sensor1 is working well and is not barried
+              //sensor1     sensor1_Min     allowed min distance
+              //reference point: 145 (143 - 147 is fine) 
+              if (sensor1 >= sensor1_Min) {
+                      //Serial.println(allow2updatePreviousMoveServo7_timer);
+                      if (allow2updatePreviousMoveServo7_timer) {
+                      //start
+                              allow2updatePreviousMoveServo7_timer = false;//lock
+                              previousMoveServo7_timer = currentMillis;
+                              //Serial.println(F("previousMoveServo7_timer"));
+                              //Serial.println(previousMoveServo7_timer);
+                              //synchronize
+                              // capture the latest value of currentMillis
+                                                    //   this is equivalent to noting the time from a clock
+                                                    //   use the same time for all servo 7 movements to keep them synchronized
+                  
+                              robotController.moveServo(7, 485, 1000);//set speed
+                              isRunningTrain = true;
+                              //Serial.println(currentMillis - previousMoveServo7_timer);
+                              //Serial.println(durationMoveTrain);
+                      } else {//!allow2updatePreviousMoveServo7_timer
+                  
+                              if (currentMillis - previousMoveServo7_timer > durationMoveTrain) {
+                                stopTrain();
+                                //it could be wrong// previousDistanceSensor1 = sensor1;
+                              } else {
+                                //skip//do nothing 
+                              }
+                      }
+              } else {//sensor < sensor1_Min
+                //skip //do nothing
+              }
+    
+      } else {
+          //skip//do nothing   
+      }
+  } else {//set up
+      //protection:
+      //moveForward(durationMoveTrain_Max); allowed max distance //moveForward(durationMoveTrain_referPoint2jointPoint); in the setup() which means sensor1 310 joint point
+      //previousDistanceSensor1 = sensor1; //update the previousDistanceSensor1 only if the sensor1 is working well and is not barried
+      //sensor1     sensor1_Min     allowed min distance
+      //reference point: 145 (143 - 147 is fine) 
+      if (sensor1 >= sensor1_Min) {
+                robotController.moveServo(7, 485, 1000);//set speed
+                isRunningTrain = true;
+                delay(durationMoveTrain);
+                stopTrain();
+                //it could be wrong// previousDistanceSensor1 = sensor1;
+
+      } else {//sensor < sensor1_Min
+                //skip //do nothing
+      }
+  }
+}
+
+//========================================================================================================================================================================
+void stopTrain() {
+    //default//allow2updatePreviousMoveServo7_timer = false;//lock
+    robotController.moveServo(7, 500, 1);//train stop:
+    //previousDistanceSensor1 = sensor1; //update the previousDistanceSensor1 only if the sensor1 is working well and is not barried
+    //no update it because it could be not correct
+    isRunningTrain = false;
+}

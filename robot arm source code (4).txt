@@ -23,7 +23,7 @@
 //there is no unsigned byte in Arduino //0 - 255 //A byte stores an 8-bit unsigned number, from 0 to 255.
 //unsigned short //0 - 65535
 //unsigned int   //0 - (2^32 - 1)
-//unsigned long
+//unsigned long  //0 - (2^64 - 1)
 
 // --------CONSTANTS (won't change)-------------------------------------------------------
 // address we will assign if dual sensor is present
@@ -620,6 +620,7 @@ void loopInSetup() {
 //Step 1.
 //mian function:throw the leftover away:
 //========================================================================================================================================================================
+//do not use switch(){} in the if(){} structure. No matter directly or indirectly call in the if(), switch() will be not working
 
 bool step1() {
   static bool isDone = false;

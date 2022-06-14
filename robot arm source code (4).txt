@@ -1,7 +1,8 @@
 //there are about 25 functions in this robot control script
-//
+//porject idea introduction:
+//https://docs.google.com/presentation/d/12GfPPMKdLY4WXjXnS6jgWiD87svpd2VR/edit?usp=sharing&ouid=104479909616474097737&rtpof=true&sd=true
 //give power to robot platform, then connect the data wire with a computer
-//wire mode (could be controled through wireless tech., Wi-Fi)
+//wire mode (could be controled through wireless, or Wi-Fi tech.)
 //select and start (single servo control/ group action)
 //========================================================================================================================================================================
 

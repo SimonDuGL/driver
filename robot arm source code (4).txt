@@ -1,7 +1,7 @@
 //there are about 25 functions in this robot control script
 //
 //give power to robot platform, then connect the data wire with a computer
-//wire mode (could be control through wireless tech., Wi-Fi)
+//wire mode (could be controled through wireless tech., Wi-Fi)
 //select and start (single servo control/ group action)
 //========================================================================================================================================================================
 
@@ -104,7 +104,7 @@ Adafruit_VL53L0X2 lox1; //VL53L0X2 lox1;
 //VL53L0X2 lox2;
 VL53L0X2 lox3;
 VL53L0X2 lox4;
-SoftwareSerial mySerial(RxPin, TxPin); //Instantiate soft serial port£¨rx£¬tx£©
+SoftwareSerial mySerial(RxPin, TxPin); //Instantiate soft serial portÂ£Â¨rxÂ£Â¬txÂ£Â©
 LobotServoController robotController(mySerial); //Instantiate servo controller communication library
 Ultrasound ultrasound; //Instantiate the ultrasonic class
 //Screen screen;

@@ -13,7 +13,7 @@
 #include "Adafruit_VL53L0X2.h"
 #include "LobotServoController.h"
 #include "Ultrasound.h"
-//#include "Screen.h"
+#include "U8g2lib.h"
 #include <SoftwareSerial.h>
 #include <Arduino.h>//default
 #include <Wire.h>
@@ -30,7 +30,7 @@
 // --------CONSTANTS (won't change)-------------------------------------------------------
 // address we will assign if dual sensor is present
 #define LOX1_ADDRESS 0x30//0x27 and 0x28 could be used
-#define LOX2_ADDRESS 0x29//default
+//#define LOX2_ADDRESS 0x29//default
 #define LOX3_ADDRESS 0x31
 #define LOX4_ADDRESS 0x32
 
@@ -86,7 +86,7 @@ byte barrierIndex = 9;
   //dictionary:
   //the trashbin durationMoveTrain_Max, table 25000, the duration of train movement  
   unsigned int durationMoveTrain_trashBin = durationMoveTrain_Max;
-  unsigned int durationMoveTrain_table = durationMoveTrain_referPoint2jointPoint + 10000;
+  unsigned int durationMoveTrain_table = durationMoveTrain_referPoint2jointPoint + 13000;
   
 
 //------------ VARIABLES (will change)-----------------------------------------------------
@@ -102,14 +102,15 @@ unsigned long currentMillis = 0; //stores the value of total run time
 //in this class only duration or interval period is used
 
 // objects for the vl53l0x
-Adafruit_VL53L0X2 lox1; //VL53L0X2 lox1;
+VL53L0X2 lox1;//Adafruit_VL53L0X2 lox1; //
 //VL53L0X2 lox2;
 VL53L0X2 lox3;
 VL53L0X2 lox4;
 SoftwareSerial mySerial(RxPin, TxPin); //Instantiate soft serial port£¨rx£¬tx£©
 LobotServoController robotController(mySerial); //Instantiate servo controller communication library
 Ultrasound ultrasound; //Instantiate the ultrasonic class
-//Screen screen;
+U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);//screen = Screen();
+
   /*
   //why it cause dead loop if we call constructors in setup()
   lox1 = Adafruit_VL53L0X2(); //lox1 = VL53L0X2();
@@ -118,7 +119,6 @@ Ultrasound ultrasound; //Instantiate the ultrasonic class
   lox4 = VL53L0X2();
   //robotController(mySerial);
   ultrasound = Ultrasound();  //Instantiate the ultrasonic class
-  //screen = Screen();
   */
   
 bool isRunTime = false;
@@ -247,6 +247,19 @@ void setup() {
             
               //initial sensors
               //________________________________
+              {
+                  u8g2.begin();//Wire.begin();
+                  u8g2.setFontPosTop();
+              
+                  u8g2.setDisplayRotation(U8G2_R2);
+                  u8g2.setFont(u8g2_font_fub20_tr);
+                  u8g2.firstPage();
+                  do {
+                    u8g2.setCursor(0, 38);
+                    u8g2.println("0.0");
+                  } while ( u8g2.nextPage() );
+                
+              }
               setID();
               delay(100); // the TOF distance sensors need 90 ms to read
   initialization(); //read_multi_tof_sensors(); //previousDistanceSensor1 = sensor1;
@@ -320,6 +333,7 @@ void loop() {
   //read
   //____________________________________________________________________________________________________________________
             //user IO
+            readSerial(); //asynchronous, fast
             readButton(); //asynchronous, fast
             //sensors
             if (isHere(IR3))//the farthest InfraRedSensor
@@ -360,29 +374,44 @@ void loop() {
             run();
             //Serial.println(F("isSafe2grib"));
             //Serial.println(isSafe2grib);
-            bool isDoneStep1 = step1();
-            if (isDoneStep1) {
+           //bool isDoneStep1 = step1();
+           //if (isDoneStep1) {
               step3();
-            }
+            //}
 
             
    //display //report to the PC or monitor
    //____________________________________________________________________________________________________________________
-            //screen.draw(sensor3); //asynchronous, very slow
+            //draw(sensor3); //asynchronous, very slow
 
   
   //delay(100); // do not use delay() in the loop() {}, it will cause the currentMillis delay 100 ms, which could undermine the servo7 movement 100 * 0.0105 =  about 1 cm
 }
 
 //====================================================================================================================================================================
+void readSerial() {
+          static unsigned long previousButtonMillis_timer;
+          unsigned short buttonInterval = 200;
+          char NumTouchLocal;
+          if (previousButtonMillis_timer <=  abs2(millis() - (long)buttonInterval)) {// currentMillis = abs2(millis() - (long)buttonInterval)
+              previousButtonMillis_timer += buttonInterval;
+              if (Serial.available() > 0) {
+                NumTouchLocal = char(Serial.read());
+                NumTouch = (byte)NumTouchLocal - (byte)('0');
+                Serial.println(NumTouch);
+              }
+          }
+}
 
+
+//====================================================================================================================================================================
 void initialization() {
                             //could be initialized again________________________
                             durationMoveTrain_Max = durationMoveTrain_referPoint2jointPoint + 30000; //45000;
                             //dictionary:
                             //the trashbin durationMoveTrain_Max, table 25000, the duration of train movement  
                             durationMoveTrain_trashBin = durationMoveTrain_Max;
-                            durationMoveTrain_table = durationMoveTrain_referPoint2jointPoint + 10000;
+                            durationMoveTrain_table = durationMoveTrain_referPoint2jointPoint + 13000;
                             
                             //could be initialized again________________________
                             //assume servo7 is controlled by arduino board, Hiwonder robot arm board support it by providing energy and delivering information.
@@ -399,7 +428,7 @@ void initialization() {
                             durationMoveTrain_remainingPlanned = 0;
                             isFirstTime2SetDurationMoveTrain_remainingPlanned = true;
                             previousMillis = 0;
-                            //unsigned short sensor2 = 0;
+                            //sensor2 = 0;
                             sensor3 = 0;
                             sensor4 = 0;
                             distance = 0; //ultrasound sensor
@@ -436,6 +465,40 @@ void initialization() {
               } else {//currentMillis > durationMoveTrain_Max
                 //skip
               }
+}
+
+//========================================================================================================================================================================
+void draw(unsigned int sensor3) {
+    // answer
+    // no need to synchronize, keep currentMillis local
+    // can report slowly
+      static uint32_t previousMillis_timer = 0;
+      unsigned int screenInterval = 500;
+      if (previousMillis_timer < millis() - screenInterval)//currentMillis = millis() - screenInterval
+      {
+        previousMillis_timer = previousMillis_timer + screenInterval;//set clock
+        u8g2.clearBuffer();
+        u8g2.firstPage();
+        do {
+          if(sensor3 < 350)//
+            {
+              u8g2.setFont(u8g2_font_fub35_tn);//u8g2.setFont(u8g2_font_fub35_tn); // 791 bytes
+              u8g2.setCursor(0, 38);
+              //Serial.println(sensor3);
+              //u8g2.print(" ");
+              u8g2.print(sensor3, 1);
+              //u8g2.setCursor(90, 38);
+              //u8g2.setFont(u8g2_font_fub20_tr); // 2520 bytes
+              //u8g2.println("mm");
+            }
+           else//>= 350
+            {
+              //u8g2.setFont(u8g2_font_fub20_tr);
+              //u8g2.setCursor(5, 38);
+              //u8g2.println("over range");
+            }
+        } while ( u8g2.nextPage());
+      }
 }
 
 //Run button function
@@ -1022,7 +1085,7 @@ void step3() {
 //========================================================================================================================================================================
 
 void readRobot() {
-  unsigned short robotInterval = 100;
+  unsigned short robotInterval = 500;
   static unsigned long previousButtonMillis_timer; //unsigned long
   if (previousButtonMillis_timer <=  abs2(millis() - (long)robotInterval)) {// currentMillis = abs2(millis() - (long)robotInterval)
         previousButtonMillis_timer += robotInterval;
@@ -1247,7 +1310,7 @@ void readButton() {
                                                                                           else
                                                                                           {
                                                                                             count++;
-                                                                                            if (count > 15)
+                                                                                            if (count >50)
                                                                                             {
                                                                                               step = 2;
                                                                                               count = 0;
@@ -1264,7 +1327,7 @@ void readButton() {
                                                                                           //output NumTouchLocal
                                                                                           NumTouch = NumTouchLocal;
                                                                                           count++;
-                                                                                          if (count > 1)  
+                                                                                          if (count > 5)  
                                                                                           {
                                                                                             count = 0;
                                                                                             NumTouchLocal = 0;
@@ -1280,8 +1343,9 @@ void readButton() {
                         }
                       }
 
-                      Serial.println(F("button"));
-                      Serial.println(NumTouchLocal);
+                      //Serial.println(F("button"));
+                      //Serial.println(NumTouchLocal);
+                      draw(NumTouchLocal); //asynchronous, very slow
                       //Serial.println(NumTouch);
                       
           }
@@ -1358,7 +1422,7 @@ void setID() {
   digitalWrite(SHT_LOX3, LOW);
   digitalWrite(SHT_LOX4, LOW);
 
-  /*
+  
   // initing LOX1
   Wire.begin(); //This function initializes the Wire library
   lox1.setAddress(LOX1_ADDRESS); //set address//
@@ -1366,23 +1430,23 @@ void setID() {
     Serial.println(F("Failed to boot first VL53L0X"));
     //while(1);
   }
-  */
+  /*
   // initing LOX1
   if(!lox1.begin(LOX1_ADDRESS, false, &Wire, 3)) {
     //Serial.println(F("Failed to boot first VL53L0X, LOX1"));
     //while(1);
   }
-  delay(10);
+  */
 
   // activating LOX2
-  digitalWrite(SHT_LOX2, HIGH);
+  //digitalWrite(SHT_LOX2, HIGH);
   delay(10);
 
   //initing LOX2
   //Wire.begin(); //This function initializes the Wire library
   //default//lox2.setAddress(LOX2_ADDRESS); //set address//
   //if(!lox2.init()) {
-  //  Serial.println(F("Failed to boot second VL53L0X"));
+    //Serial.println(F("Failed to boot second VL53L0X"));
     //while(1);
   //}
 
@@ -1420,52 +1484,55 @@ void read_multi_tof_sensors() {
   // the TOF distance sensors need 90 ms to read
   //asynchronous, fast
   static unsigned long previousMillis_timer;
-  unsigned short sensorInterval = 100; //short
+  unsigned short sensorInterval = 500; //short
   if (previousMillis_timer < abs2(millis() - (long)sensorInterval))// currentMillis - sensorInterval could be != abs2(millis() - (long)sensorInterval)
   {
     previousMillis_timer += sensorInterval; //set clock
   //make sure that the sensor value is number instaed of some mysterious string
+              /*
               // this holds the measurement
               VL53L0X_RangingMeasurementData_t measure1;
             
               lox1.rangingTest(&measure1, false); // pass in 'true' to get debug data printout!
               // print sensor1 reading
-              Serial.print(F("1: "));
+              //Serial.print(F("1: "));
               if(measure1.RangeStatus != 4) {     // if not out of range
                 sensor1 = measure1.RangeMilliMeter;    
-                Serial.print(sensor1);
+                Serial.println(sensor1);
                 //Serial.print(F("mm"));    
               } else {
                 //Serial.print(F("Out of range"));
               }
-              /*
-              Serial.print(F("1: "));
-                Serial.print(lox1.readRangeSingleMillimeters());
-                Serial.print(F("mm"));    
               */
+              sensor1 = lox1.readRangeSingleMillimeters();
+              
+              Serial.print(F(" 1: "));
+              Serial.print(sensor1);
+              //Serial.print(F("mm"));    
+              
               
               //Serial.print(F(" "));
-            
+              //sensor2 = lox2.readRangeSingleMillimeters();
               // print sensor2 reading
-              //Serial.print(F("2: "));
-              //  Serial.print(lox2.readRangeSingleMillimeters());
+              //Serial.print(F("  2: "));
+              //Serial.print(sensor2);
               //  Serial.print(F("mm"));
             
-              Serial.print(F(" "));
+              //Serial.print(F(" "));
             
               // print sensor3 reading
-              Serial.print(F("3: "));
+              Serial.print(F("  3: "));
               sensor3 = lox3.readRangeSingleMillimeters();
               Serial.print(sensor3);
               //Serial.print(F("mm"));
               
-              Serial.print(F(" "));
+              //Serial.print(F(" "));
             
               // print sensor4 reading
-              Serial.print(F("4: "));
+              Serial.print(F("  4: "));
               sensor4 = lox4.readRangeSingleMillimeters();
-                Serial.print(sensor4);
-                //Serial.print(F("mm"));
+              Serial.print(sensor4);
+              Serial.print(F(" mm"));
                 
               Serial.println();
   }

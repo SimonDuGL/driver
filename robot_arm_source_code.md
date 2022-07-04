@@ -102,7 +102,9 @@ unsigned long currentMillis = 0; //stores the value of total run time
 //in this class only duration or interval period is used
 
 // objects for the vl53l0x
-VL53L0X2 lox1;//Adafruit_VL53L0X2 lox1; //
+VL53L0X2 lox1;//Adafruit_VL53L0X2 lox1; 
+//Adafruit TOF sensor library is good, just the sketch and global variables are occupying too much memory space 
+//(almost 50% memory of the flash disk of arduino uno R3) 
 //VL53L0X2 lox2;
 VL53L0X2 lox3;
 VL53L0X2 lox4;

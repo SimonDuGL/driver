@@ -86,8 +86,7 @@ byte barrierIndex = 9;
   //dictionary:
   //the trashbin durationMoveTrain_Max, table 25000, the duration of train movement  
   unsigned int durationMoveTrain_trashBin = durationMoveTrain_Max;
-  unsigned int durationMoveTrain_table = durationMoveTrain_referPoint2jointPoint + 13000;
-  
+  unsigned int durationMoveTrain_table = durationMoveTrain_referPoint2jointPoint + 15000;
 
 //------------ VARIABLES (will change)-----------------------------------------------------
 unsigned long currentMillis = 0; //stores the value of total run time
@@ -102,9 +101,7 @@ unsigned long currentMillis = 0; //stores the value of total run time
 //in this class only duration or interval period is used
 
 // objects for the vl53l0x
-VL53L0X2 lox1;//Adafruit_VL53L0X2 lox1; 
-//Adafruit TOF sensor library is good, just the sketch and global variables are occupying too much memory space 
-//(almost 50% memory of the flash disk of arduino uno R3) 
+VL53L0X2 lox1;//Adafruit_VL53L0X2 lox1; //
 //VL53L0X2 lox2;
 VL53L0X2 lox3;
 VL53L0X2 lox4;
@@ -376,10 +373,10 @@ void loop() {
             run();
             //Serial.println(F("isSafe2grib"));
             //Serial.println(isSafe2grib);
-           //bool isDoneStep1 = step1();
-           //if (isDoneStep1) {
+           bool isDoneStep1 = step1();
+           if (isDoneStep1) {
               step3();
-            //}
+           }
 
             
    //display //report to the PC or monitor
@@ -832,7 +829,7 @@ void step3() {
                                                                                                               if (!robotController.isRunning()) {
                                                                                                                         step = 22;
                                                                                                                        //train move backward 2s //move to the side of the fidge(joint point + 9s , moveForward(durationMoveTrain_fridgeSide),
-                                                                                                                        durationMoveTrain = 2000;
+                                                                                                                        durationMoveTrain = 4000;
                                                                                                               } 
                                              } else {
                                               if (step == 22) {
@@ -948,8 +945,8 @@ void step3() {
                                                                                                                } else {//!isSafe2grib
                                                                                                                             if (!robotController.isRunning())  {
                                                                                                                                   step = 8;
-                                                                                                                                  //move it to the side of table,moveForward(durationMoveTrain_table), + 12s
-                                                                                                                                  durationMoveTrain = durationMoveTrain_table + 12 * 1000;
+                                                                                                                                  //move it to the side of table,moveForward(durationMoveTrain_table), + 10s
+                                                                                                                                  durationMoveTrain = durationMoveTrain_table + 10 * 1000;
                                                                                                                             }
                                                                                                                }                                                          } else {
                                                             if (step == 8) {

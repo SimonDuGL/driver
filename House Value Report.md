@@ -80,10 +80,12 @@ Training model demo:
 ![Slide37](https://user-images.githubusercontent.com/101145370/165833263-855e83c4-5075-4d3e-b20b-43e70344109c.PNG)
 ![Slide40](https://user-images.githubusercontent.com/101145370/165833292-e2db0bb4-b6a8-4463-93c9-8f909ce4aa39.PNG)
 
-Just the model could be improved by considering more public and private factors. For example, we do not know whether the cooperative buildings are more popular for rent. More features like tax assessment, detailed geographic location(e.g. Neighborhood, school and transportation) will be involved.
+Just the model could be improved by considering more public and private factors. For example, we do not know whether the cooperative buildings are more popular for rent. More features like tax assessment, detailed geographic location(e.g. Neighborhood, school and transportation) will be involved. Besides, public also more and more consider the weather condition and the risk management (insurance, emergency response, extreme weather prediction and prevention of the demage. 
 ![Slide42](https://user-images.githubusercontent.com/101145370/165833654-5c2a4877-fc63-4789-9974-8f4b12e61240.PNG)
 
 Reference:
+
+
 https://www.census.gov/programs-surveys/acs/data.html
 
 https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html?highlight=regression#sklearn.linear_model.LinearRegression
@@ -100,6 +102,11 @@ Zillow 2019 method
 
 https://www.zillow.com/research/zhvi-methodology-2019-deep-26226/
 
+PBS,the Climate Changes Risk of different region in the US
+
+https://www.youtube.com/watch?v=l_Oe6YK0DgE&t=5s
+
+
 My code:
 
 https://github.com/SimonDuGL/driver
@@ -108,4 +115,4 @@ https://colab.research.google.com/drive/1PH8_PWssxGLt7xo6GTT21kNBvqg55IhF?usp=sh
 
 author email:
 
-gd22@rice.edu
+duguoliangapply@gmail.com

@@ -1,0 +1,201 @@
+"product_id","product_name","category","price"
+1,"Skirt","Apparel",47.79
+2,"Scarf","Apparel",12.79
+3,"Shorts","Apparel",25.99
+4,"Jacket","Apparel",82.99
+5,"Scarf","Apparel",83.5
+6,"Sweater","Apparel",98.5
+7,"Scarf","Apparel",52.5
+8,"Shorts","Apparel",11.99
+9,"Shoes","Apparel",26.5
+10,"T-shirt","Apparel",68.79
+11,"Jeans","Apparel",98
+12,"Dress","Apparel",57.99
+13,"Jeans","Apparel",88.99
+14,"Dress","Apparel",79
+15,"Speaker","Electronics",104
+16,"Camera","Electronics",244.99
+17,"Tablet","Electronics",457.5
+18,"Camera","Electronics",415.5
+19,"Smartwatch","Electronics",356.99
+20,"TV","Electronics",358.99
+21,"Speaker","Electronics",190
+22,"Camera","Electronics",92
+23,"Speaker","Electronics",456.99
+24,"Smartphone","Electronics",85
+25,"TV","Electronics",128.79
+26,"Mouse","Electronics",381
+27,"TV","Electronics",96.79
+28,"Laptop","Electronics",181.5
+29,"Desk","Furniture",53.99
+30,"Coffee Table","Furniture",225.5
+31,"Dresser","Furniture",208.5
+32,"Desk","Furniture",206.5
+33,"Armchair","Furniture",208.5
+34,"Desk","Furniture",219.5
+35,"Coffee Table","Furniture",227.79
+36,"Chair","Furniture",26.5
+37,"Bookshelf","Furniture",143.5
+38,"Wardrobe","Furniture",173.99
+39,"Dresser","Furniture",235
+40,"Coffee Table","Furniture",53.5
+41,"Dresser","Furniture",106.79
+42,"Sofa","Furniture",59.99
+43,"Fridge","Home & Kitchen",130.79
+44,"Fridge","Home & Kitchen",136
+45,"Air Fryer","Home & Kitchen",120.99
+46,"Bowl","Home & Kitchen",25.5
+47,"Toaster","Home & Kitchen",105.5
+48,"Bowl","Home & Kitchen",133.5
+49,"Dishwasher","Home & Kitchen",89.79
+50,"Microwave","Home & Kitchen",50.99
+51,"Vacuum Cleaner","Home & Kitchen",29.79
+52,"Microwave","Home & Kitchen",45
+53,"Vacuum Cleaner","Home & Kitchen",117.79
+54,"Dishwasher","Home & Kitchen",56.99
+55,"Cookware","Home & Kitchen",93.99
+56,"Vacuum Cleaner","Home & Kitchen",137.5
+57,"Puzzle","Toys",38.99
+58,"Action Figure","Toys",47
+59,"Puzzle","Toys",7.99
+60,"Toy Car","Toys",22.79
+61,"Lego Set","Toys",29.5
+62,"Building Blocks","Toys",38.99
+63,"Puzzle","Toys",10.5
+64,"Puzzle","Toys",41
+65,"Puzzle","Toys",33.5
+66,"Building Blocks","Toys",32.79
+67,"Doll","Toys",36.99
+68,"Lego Set","Toys",25.5
+69,"Doll","Toys",42.79
+70,"Building Blocks","Toys",39.99
+71,"Biography","Books",16.5
+72,"Sci-Fi Book","Books",27.79
+73,"Magazine","Books",20.79
+74,"Biography","Books",24.5
+75,"Cookbook","Books",12
+76,"Novel","Books",29.5
+77,"Novel","Books",17
+78,"Novel","Books",25.5
+79,"Magazine","Books",16.99
+80,"Poetry Book","Books",15.79
+81,"Poetry Book","Books",25
+82,"Novel","Books",6.5
+83,"Children's Book","Books",22.99
+84,"Cookbook","Books",21.99
+85,"Toothpaste","Health & Beauty",5.5
+86,"Perfume","Health & Beauty",34
+87,"Nail Polish","Health & Beauty",5
+88,"Shaving Kit","Health & Beauty",39.99
+89,"Perfume","Health & Beauty",19.5
+90,"Lip Balm","Health & Beauty",16.99
+91,"Perfume","Health & Beauty",27.79
+92,"Moisturizer","Health & Beauty",47.79
+93,"Hair Gel","Health & Beauty",17.99
+94,"Conditioner","Health & Beauty",37
+95,"Conditioner","Health & Beauty",34.99
+96,"Shaving Kit","Health & Beauty",10.99
+97,"Toothpaste","Health & Beauty",6
+98,"Moisturizer","Health & Beauty",6.5
+99,"Bicycle","Sports & Outdoors",145.79
+100,"Soccer Ball","Sports & Outdoors",102
+101,"Soccer Ball","Sports & Outdoors",194.79
+102,"Camping Tent","Sports & Outdoors",146.5
+103,"Football","Sports & Outdoors",163.79
+104,"Bicycle","Sports & Outdoors",183.5
+105,"Tennis Racket","Sports & Outdoors",68.79
+106,"Tennis Racket","Sports & Outdoors",142.5
+107,"Camping Tent","Sports & Outdoors",164.5
+108,"Tennis Racket","Sports & Outdoors",184.79
+109,"Camping Tent","Sports & Outdoors",158.79
+110,"Basketball","Sports & Outdoors",136.79
+111,"Sleeping Bag","Sports & Outdoors",46.79
+112,"Football","Sports & Outdoors",156
+113,"Ring","Jewelry",142
+114,"Watch","Jewelry",150.99
+115,"Ankle Bracelet","Jewelry",136.79
+116,"Cufflinks","Jewelry",90
+117,"Ring","Jewelry",99
+118,"Ankle Bracelet","Jewelry",154.5
+119,"Watch","Jewelry",118.5
+120,"Charm Bracelet","Jewelry",48.79
+121,"Charm Bracelet","Jewelry",83.99
+122,"Ring","Jewelry",27
+123,"Earrings","Jewelry",41.99
+124,"Pendant","Jewelry",94.79
+125,"Cufflinks","Jewelry",16.5
+126,"Ankle Bracelet","Jewelry",18.79
+127,"Sandals","Shoes",133
+128,"Boots","Shoes",56.99
+129,"Loafers","Shoes",24.99
+130,"Sneakers","Shoes",79
+131,"Slippers","Shoes",138
+132,"Running Shoes","Shoes",117.5
+133,"Sandals","Shoes",107
+134,"Heels","Shoes",135
+135,"Sneakers","Shoes",48.5
+136,"Sneakers","Shoes",120.5
+137,"Dress Shoes","Shoes",56
+138,"Slippers","Shoes",85.5
+139,"Slippers","Shoes",149
+140,"Heels","Shoes",129
+141,"Car Battery","Automotive",80
+142,"Engine Oil","Automotive",22
+143,"Car Seat","Automotive",29.99
+144,"Tire","Automotive",99.5
+145,"Engine Oil","Automotive",22.79
+146,"Car Wax","Automotive",63.5
+147,"Engine Oil","Automotive",84.5
+148,"Car Battery","Automotive",86
+149,"Headlights","Automotive",88
+150,"Car Seat","Automotive",49.79
+151,"Jump Starter","Automotive",28.99
+152,"Jump Starter","Automotive",44.79
+153,"Jump Starter","Automotive",26.79
+154,"Car Seat","Automotive",76.5
+155,"Eggs","Groceries",18.99
+156,"Banana","Groceries",20.79
+157,"Butter","Groceries",13
+158,"Chicken","Groceries",4
+159,"Milk","Groceries",17.5
+160,"Banana","Groceries",17
+161,"Eggs","Groceries",9.79
+162,"Eggs","Groceries",2.5
+163,"Chicken","Groceries",16.99
+164,"Bread","Groceries",18.99
+165,"Butter","Groceries",8.99
+166,"Banana","Groceries",15.5
+167,"Cheese","Groceries",8
+168,"Apple","Groceries",16.5
+169,"Pet Toys","Pet Supplies",25
+170,"Cat Litter","Pet Supplies",21.99
+171,"Dog Food","Pet Supplies",30
+172,"Cat Litter","Pet Supplies",22
+173,"Pet Food Bowl","Pet Supplies",17.79
+174,"Cat Litter","Pet Supplies",22.79
+175,"Dog Food","Pet Supplies",27.99
+176,"Dog Food","Pet Supplies",31
+177,"Pet Toys","Pet Supplies",48
+178,"Collar","Pet Supplies",9.99
+179,"Leash","Pet Supplies",24.79
+180,"Pet Toys","Pet Supplies",38.99
+181,"Pet Toys","Pet Supplies",49
+182,"Leash","Pet Supplies",35
+183,"Pacifier","Baby Products",5.99
+184,"Pacifier","Baby Products",4.99
+185,"Baby Clothes","Baby Products",7.5
+186,"Baby Lotion","Baby Products",9.99
+187,"Baby Clothes","Baby Products",5.5
+188,"Pacifier","Baby Products",6.99
+189,"Diapers","Baby Products",6.79
+190,"Pacifier","Baby Products",8.79
+191,"Baby Clothes","Baby Products",9
+192,"Baby Bottle","Baby Products",7
+193,"Baby Wipes","Baby Products",5.5
+194,"Baby Monitor","Baby Products",10.5
+195,"Baby Stroller","Baby Products",6
+196,"Pacifier","Baby Products",10.79
+197,"Drill","Tools & Home Improvement",53
+198,"Paintbrush","Tools & Home Improvement",76.79
+199,"Extension Cord","Tools & Home Improvement",15
+200,"Tool Set","Tools & Home Improvement",51
